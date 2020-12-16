@@ -556,9 +556,9 @@ class MyVideoCapture:
         else:
             return (ret, None)
  
-video_source='01.mp4'
+video_source='./01.mp4'
 
-video='02.mp4'
+video='./02.mp4'
 
 App(root, "Tkinter and OpenCV",video_source,video,470,33) 
 
