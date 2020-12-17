@@ -38,8 +38,6 @@ UV0 = steer.UV()
 root = tkinter.Tk()  
 root.geometry("780x630")
 
-root.attributes("-fullscreen", True)
-
 root.wm_title("Digital Microscope")
 #root.config(background='#BDBDBD')
 
