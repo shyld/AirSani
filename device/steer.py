@@ -79,22 +79,26 @@ class UV:
 		phi = np.arctan2(y,x)/np.pi*180
 		print('rho,phi: ', rho,phi)
 		phi_bias = np.zeros(4)
-		phi_bias[0] = -90
-		phi_bias[1] = -90
-		phi_bias[2] = 105
-		phi_bias[3] = 45
+		phi_bias[0] = 0
+		phi_bias[1] = 0
+		phi_bias[2] = -180
+		phi_bias[3] = -180
 
 		phi_t = phi - phi_bias[LED]
 	        
 		if phi_t<0:
 			rho = -rho
 			phi_t = phi_t +180
+			
+		if phi_t>180:
+			rho = -rho
+			phi_t = phi_t -180 
 
 		delta_rho = rho - self.rho0[LED]
 		delta_phi = phi_t - self.phi0[LED]
 
-		rho0[LED] = rho
-		phi0[LED] = phi_t
+		self.rho0[LED] = rho
+		self.phi0[LED] = phi_t
 		# apply limits
 		d1 = -1*int(pixel_steps * delta_rho)
 		d2 = int(degree_steps * delta_phi)
@@ -126,7 +130,7 @@ class UV:
 
 	def UV_driver(self,x1,y1,uv,p1,p2,q1,q2,l,LED):
 		
-		x,y,_,_=convert_xy2degree(x1,y1,LED)
+		x,y,_,_=self.convert_xy2degree(x1,y1,LED)
 
 		s = 8 # Puts Motors in Sleep
 		if uv:
@@ -136,8 +140,8 @@ class UV:
 
 		if x!=0 or y !=0:
 			GPIO.output(s, True)
-			motor(x,p1,p2)
-			motor(y,q1,q2)
+			self.motor(x,p1,p2)
+			self.motor(y,q1,q2)
 			GPIO.output(s, False)
 
 	def get_pins(self,LED_id):
@@ -161,8 +165,10 @@ class UV:
 
 
 	def UV_go(self,LED,x,y,light_on):
+		x = int(x)
+		y = int(y)
 
-		p1,p2,q1,q2,l = get_pins(LED_id = LED)
+		p1,p2,q1,q2,l = self.get_pins(LED_id = LED)
 		self.UV_driver(x1= x, y1=y, uv=light_on,p1=p1,p2=p2,q1=q1,q2=q2,l=l,LED=LED)
 
 
