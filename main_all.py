@@ -585,11 +585,11 @@ class MyVideoCapture:
         else:
             return (ret, None)
  
-video_source='media/01.mp4'
+video_source='/home/shyldai/shyld/AirSani/media/01.mov'
 
-video='media/02.mp4'
+video='/home/shyldai/shyld/AirSani/media/02.mov'
 
-App(root, "Tkinter and OpenCV",video_source,video,470,33) 
+App(root, "Shyld AI",video_source,video,470,33) 
 
 
 
