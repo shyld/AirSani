@@ -585,9 +585,9 @@ class MyVideoCapture:
         else:
             return (ret, None)
  
-video_source='/home/shyldai/shyld/AirSani/media/01.mov'
+video_source='/home/shyldai/shyld/AirSani/media/01.mp4'
 
-video='/home/shyldai/shyld/AirSani/media/02.mov'
+video='/home/shyldai/shyld/AirSani/media/02.mp4'
 
 App(root, "Shyld AI",video_source,video,470,33) 
 
