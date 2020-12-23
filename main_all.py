@@ -6,7 +6,7 @@ Created on Wed Dec  9 15:01:04 2020
 """
 
 import tkinter
-
+import numpy
 from tkinter import *
 
 from tkinter import ttk
@@ -18,14 +18,32 @@ from PIL import Image, ImageTk
 import datetime
 import cv2
 import os
+from multiprocessing import Process
 
+
+
+import sys
+# insert at 1, 0 is the script path (or '' in REPL)
+#sys.path.insert(1, '/home/shyldai/shyld/product_test')
+sys.path.insert(1, './control_codes')
+sys.path.insert(1, './control_codes/device')
+#sys.path.insert(1, './control_codes/cam_IR')
+
+
+#from cam_IR import run_camera
 from device import steer
-
-
+from cam_module import MyVideoCapture
+#import IR_cam_frame
+#import RGB_cam_frame
+#import simple_RGB_cam_frame
+#from cam_module import MyVideoCapture
 ## Initialize 
 UV0 = steer.UV()
 
 
+def trunc(x):
+    y = np.min([np.max([int(x), -100]), 100])
+    return y
 
 # Parameters
 
@@ -36,8 +54,16 @@ UV0 = steer.UV()
 #creating window 
 
 root = tkinter.Tk()  
-root.geometry("780x630")
+#root.geometry("780x630")
 
+#root.attributes("-fullscreen", True)
+
+#root.wm_title("Digital Microscope")
+
+root.wm_attributes('-type','dock')
+
+root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
+root.focus_force()
 root.wm_title("Digital Microscope")
 #root.config(background='#BDBDBD')
 
@@ -57,7 +83,81 @@ button.bind('<ButtonPress-1>', lambda event: start_button(Combo.get()))
 button.place(x=200,y=0)
  """
 
+root.resizable(width=False, height=False)
 
+password = StringVar()
+
+test="maman1057"
+
+def show(text):
+    #p = password.get() #get password from entry
+    if test==password.get():
+        
+        root.destroy()
+    elif test!=password:
+        text.delete('0',tkinter.END)
+       
+    
+def close(app):
+  app.destroy()
+
+
+
+def password_set():
+    #app=Toplevel(root)
+    #app.geometry("500x300")
+    
+    #app=Toplevel(root)
+    app=LabelFrame(root, text="password",height=200,width=200,bd=4)
+    #app.geometry("200x100")
+    #app.focus_force()
+    #app.wm_title("Password")
+    app.place(x=800,y=300)
+    #app.geometry("100*100+300+300")
+       
+    #password = StringVar() #Password variable
+    #passEntry = Entry(main, textvariable=password, show='*').pack() 
+    text=ttk.Entry(app, width = 10, textvariable = password, show='*')
+    text.pack()
+    
+    #text.bind('<Return>', show())
+    submit = ttk.Button(app, text='Submit')
+    submit.pack()
+    submit.bind('<ButtonPress-1>', lambda event: show(text))
+    
+    submit = ttk.Button(app, text='Close')
+    submit.pack()
+    submit.bind('<ButtonPress-1>', lambda event: close(app))
+    
+    app.mainloop()
+    
+#root.protocol("WM_DELETE_WINDOW", password_set)
+
+  
+
+RB = tkinter.Button(root, text = "Close",width = 9,height=3,fg="red",bd=4,command=password_set)
+
+RB.place(x=1405,y=0)
+RB.bind('<ButtonPress-1>', lambda event: password_set)
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+#WIFI configuration
+
+def setting():
+    os.system("unity-control-center network")
+  #print('WIFI Setting:')
+
+R = tkinter.Button(root, text = "Connect to WIFI",width = 15,height=5,fg="blue",bd=4,command=setting)
+R.place(x=1220,y=10)
+R.bind('<ButtonPress-1>', lambda event: setting)
+
+
+
+
+##############
 def sel(st):
    print(st)
    
@@ -87,7 +187,8 @@ R3.bind('<Button-1>',lambda event: sel(R3["text"]))
 #//////////////////////////////////////////////////////////////////////////////////////////////
 #creating first LabelFrame container to add text box and buttons
 
-labelframe_1 = LabelFrame(root, text="UV Unit_1",height=150,width=350,bd=4)
+labelframe_1 = LabelFrame(root, text="UV Engine 1",height=150,width=350,bd=4)
+
 labelframe_1.place(x=0,y=25)
 #labelframe_1.pack(side=LEFT)
 
@@ -124,8 +225,10 @@ def func1(event):
     print('UV1_X:',vx1.get())
     print('UV1_Y:',vy1.get())
 
+    #
+    #vx1.get() = np.min([np.max([vx1.get(), -300]), 300])
     # UV go
-    UV0.UV_go(LED=0,x=vx1.get(),y=vy1.get(),light_on = UV0.light_on[0])
+    UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = UV0.light_on[0])
 
     #print(text2_unit1.get())
 text1_unit1.bind('<Return>', func1)
@@ -141,8 +244,10 @@ Var1 = StringVar()
 def default_color1():
     RB1["fg"]="#ff0000"
  
-RB1 =tkinter.Radiobutton(labelframe_1, variable = Var1,value = 1,fg="#ff0000",command = default_color1)
-RB1.place(x=270,y=50)
+myCanvas1 = Canvas(labelframe_1,width=20, height=18)
+myCanvas1.place(x=270,y=50)
+
+Rbutton1=myCanvas1.create_oval(1, 3, 17, 18,fill="red", outline="#DDD")
 
 
 
@@ -153,18 +258,20 @@ def turnon1():
     global x1
     if x1==0:
         
-        RB1["fg"]="#228B22"
+        #RB1["fg"]="#228B22"
+        myCanvas1.itemconfig(Rbutton1, fill="green")
         x1=1
         print("Turn On")
-        UV0.UV_go(LED=0,x=vx1.get(),y=vy1.get(),light_on = True)
+        UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = True)
 
         
     elif x1==1:
         
-        RB1["fg"]="#ff0000"
+        #RB1["fg"]="#ff0000"
+        myCanvas1.itemconfig(Rbutton1, fill="red")
         x1=0
         print("Turn Off")
-        UV0.UV_go(LED=0,x=vx1.get(),y=vy1.get(),light_on = False)
+        UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = False)
 
 
     
@@ -195,7 +302,8 @@ Rangey1.place(x=130,y=50)
 #///////////////////////////////////////////////////////////////////////////////////////////////
 #UNIT_2
 
-labelframe_2 = LabelFrame(root, text="UV Unit_2",height=150,width=350,bd=4)
+labelframe_2 = LabelFrame(root, text="UV Engine 2",height=150,width=350,bd=4)
+
 labelframe_2.place(x=0,y=175)
 #labelframe_2.pack(side=LEFT)
 
@@ -229,7 +337,7 @@ def func2(event):
     print('UV2_X:',vx2.get())
     print('UV2_Y:',vy2.get())
 
-    UV0.UV_go(LED=1,x=vx2.get(),y=vy2.get(),light_on = UV0.light_on[1])
+    UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = UV0.light_on[1])
 
     #print(text2_unit1.get())
 text1_unit2.bind('<Return>', func2)
@@ -246,15 +354,11 @@ button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_2"))"""
 
 
-Var2 = StringVar()
+myCanvas2 = Canvas(labelframe_2,width=20, height=18)
+myCanvas2.place(x=270,y=50)
 
-def default_color2():
-    RB2["fg"]="#ff0000"
- 
-RB2 = Radiobutton(labelframe_2, variable = Var1,value = 1,fg="#ff0000",command = default_color2)
+Rbutton2=myCanvas2.create_oval(1, 3, 17, 18,fill="red", outline="#DDD")
 
-
-RB2.place(x=270,y=50)
 
 
 x2=0
@@ -263,17 +367,19 @@ def turnon2():
     global x2
     if x2==0:
         
-        RB2["fg"]="#228B22"
+        #RB2["fg"]="#228B22"
+        myCanvas2.itemconfig(Rbutton2, fill="green")
         x2=1
         print("Turn On")
-        UV0.UV_go(LED=1,x=vx2.get(),y=vy2.get(),light_on = True)
+        UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = True)
         
     elif x2==1:
         
-        RB2["fg"]="#ff0000"
+        #RB2["fg"]="#ff0000"
+        myCanvas2.itemconfig(Rbutton2, fill="red")
         x2=0
         print("Turn Off")
-        UV0.UV_go(LED=1,x=vx2.get(),y=vy2.get(),light_on = False)
+        UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = False)
 
         
        
@@ -294,7 +400,7 @@ Rangey2.place(x=130,y=50)
 #//////////////////////////////////////////////////////////////////////////////////////
 #UNIT_3
 #creat LabelFrame
-labelframe_3 = LabelFrame(root, text="UV Unit_3",height=150,width=350,bd=4)
+labelframe_3 = LabelFrame(root, text="UV Engine 3",height=150,width=350,bd=4)
 labelframe_3.place(x=0,y=325)
 #labelframe_3.pack(side=LEFT)
 
@@ -327,7 +433,7 @@ def func3(event):
     print('UV3_X:',vx3.get())
     print('UV3_Y:',vy3.get())
 
-    UV0.UV_go(LED=2,x=vx3.get(),y=vy3.get(),light_on = UV0.light_on[2])
+    UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = UV0.light_on[2])
 
     #print(text2_unit1.get())
 text1_unit3.bind('<Return>', func3)
@@ -346,13 +452,10 @@ button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_3"))"""
 
 
-Var3 = StringVar()
+myCanvas3 = Canvas(labelframe_3,width=20, height=18)
+myCanvas3.place(x=270,y=50)
 
-def default_color3():
-    RB3["fg"]="#ff0000"
- 
-RB3 = Radiobutton(labelframe_3, variable = Var1,value = 1,fg="#ff0000",command = default_color3)
-RB3.place(x=270,y=50)
+Rbutton3=myCanvas3.create_oval(1, 3, 17, 18,fill="red", outline="#DDD")
 
 
 
@@ -362,17 +465,20 @@ def turnon3():
     global x3
     if x3==0:
         
-        RB3["fg"]="#228B22"
+        #RB3["fg"]="#228B22"
+        myCanvas3.itemconfig(Rbutton3, fill="green")
         x3=1
         print("Turn On")
-        UV0.UV_go(LED=2,x=vx3.get(),y=vy3.get(),light_on = True)
+        UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = True)
         
     elif x3==1:
         
-        RB3["fg"]="#ff0000"
+        #RB3["fg"]="#ff0000"
+        myCanvas3.itemconfig(Rbutton3, fill="red")
+
         x3=0
         print("Turn Off")
-        UV0.UV_go(LED=2,x=vx3.get(),y=vy3.get(),light_on = False)
+        UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = False)
 
         
        
@@ -396,7 +502,7 @@ Rangey3.place(x=130,y=50)
 #UNIT_4
 #creating LabelFrame
 
-labelframe_4 = LabelFrame(root, text="UV Unit_4",height=150,width=350,bd=4)
+labelframe_4 = LabelFrame(root, text="UV Engine 4",height=150,width=350,bd=4)
 labelframe_4.place(x=0,y=475)
 #labelframe_4.pack(side=LEFT)
 
@@ -430,7 +536,7 @@ def func4(event):
     print('UV4_X:',vx4.get())
     print('UV4_Y:',vy4.get())
 
-    UV0.UV_go(LED=3,x=vx4.get(),y=vy4.get(),light_on = UV0.light_on[3])
+    UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = UV0.light_on[3])
 
     #print(text2_unit1.get())
 text1_unit4.bind('<Return>', func4)
@@ -450,14 +556,10 @@ button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_4"))"""
 
 
-Var4 = StringVar()
+myCanvas4 = Canvas(labelframe_4,width=20, height=18)
+myCanvas4.place(x=270,y=50)
 
-def default_color4():
-    RB4["fg"]="#ff0000"
- 
-RB4 = Radiobutton(labelframe_4, variable = Var1,value = 1,fg="#ff0000",command = default_color4)
-RB4.place(x=270,y=50)
-
+Rbutton4=myCanvas4.create_oval(1, 3, 17, 18,fill="red", outline="#DDD")
 
 
 x4=0
@@ -466,17 +568,20 @@ def turnon4():
     global x4
     if x4==0:
         
-        RB4["fg"]="#228B22"
+        #RB4["fg"]="#228B22"
+        myCanvas4.itemconfig(Rbutton4, fill="green")
+
         x4=1
         print("Turn On")
-        UV0.UV_go(LED=3,x=vx4.get(),y=vy4.get(),light_on = True)
+        UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = True)
         
     elif x4==1:
         
-        RB4["fg"]="#ff0000"
+        #RB4["fg"]="#ff0000"
+        myCanvas4.itemconfig(Rbutton4, fill="red")
         x4=0
         print("Turn Off")
-        UV0.UV_go(LED=3,x=vx4.get(),y=vy4.get(),light_on = False)
+        UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = False)
 
         
  
@@ -505,31 +610,31 @@ label_2 = Label(root, text="IR Camera",height=5,width=10,bd=4,font="bold")
 label_2.place(x=360,y=430)
 
 
-
+# ////////////////////////////
 
  
 #//////////////////////////////////////////////////////////////////////////////////
 #creating video fram
 
 class App:
-    def __init__(self, window, window_title, video_source,video,X,Y):
+    def __init__(self, window, window_title):
         self.window = window
         self.window.title(window_title)
-        self.video_source = video_source
+        #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(video_source)
+        self.vid = MyVideoCapture(sensor_id=1)
         
-        self.video_source_2 = video
-        self.vid_2=MyVideoCapture(video)
+        #self.video_source_2 = video
+        self.vid_2=MyVideoCapture(sensor_id=0)
         
         # Create a canvas that can fit the above video source size
         
-        self.canvas_1 = tkinter.Canvas(window, width = 300, height = 300)
-        self.canvas_1.place(x=X,y=Y)
+        self.canvas_1 = tkinter.Canvas(window, width = 640, height = 480)
+        self.canvas_1.place(x=480,y=0)
                 
-        self.canvas_2 = tkinter.Canvas(window, width = 300, height = 312)
-        self.canvas_2.place(x=470,y=300)
+        self.canvas_2 = tkinter.Canvas(window, width = 640, height = 480)
+        self.canvas_2.place(x=480,y=490)
         
         self.delay = 15
         self.update()
@@ -554,49 +659,13 @@ class App:
         self.window.after(self.delay, self.update)
         
         
-# Create a window and pass it to the Application object
-   
 
-class MyVideoCapture:
-    def __init__(self, video_source):
-        # Open the video source
-        self.vid = cv2.VideoCapture(video_source)
-        if not self.vid.isOpened():
-            raise ValueError("Unable to open video source", video_source)
-            
-        # Get video source width and height
-        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        
-    # Release the video source when the object is destroyed
-    def __del__(self):
-        if self.vid.isOpened():
-            self.vid.release()
-        self.window.mainloop()
-        
-    def get_frame(self):
-        if self.vid.isOpened():
-            ret, frame = self.vid.read()
-            if ret:
-                # Return a boolean success flag and the current frame converted to BGR
-                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            else:
-                return (ret, None)
-        else:
-            return (ret, None)
- 
-video_source='/home/shyldai/shyld/AirSani/media/01.mp4'
-
-video='/home/shyldai/shyld/AirSani/media/02.mp4'
-
-App(root, "Shyld AI",video_source,video,470,33) 
+App(root, "Shyld AI") 
 
 
-
+#cv2image = my_cam_obj.get_frame()
+os.popen("bash lock_screen.txt")
 root.mainloop()
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
