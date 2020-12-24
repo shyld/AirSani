@@ -19,6 +19,7 @@ import datetime
 import cv2
 import os
 from multiprocessing import Process
+import subprocess
 
 
 
@@ -666,7 +667,8 @@ App(root, "Shyld AI")
 
 
 #cv2image = my_cam_obj.get_frame()
-os.popen("bash lock_screen.txt")
+#os.popen("bash lock_screen.txt")
+#subprocess.Popen(["bash", "lock_screen.txt"])
 root.mainloop()
 
 
