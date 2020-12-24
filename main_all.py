@@ -25,14 +25,16 @@ from multiprocessing import Process
 import sys
 # insert at 1, 0 is the script path (or '' in REPL)
 #sys.path.insert(1, '/home/shyldai/shyld/product_test')
-sys.path.insert(1, './control_codes')
-sys.path.insert(1, './control_codes/device')
+#sys.path.insert(1, './control_codes')
+#sys.path.insert(1, './control_codes/device')
 #sys.path.insert(1, './control_codes/cam_IR')
-
+sys.path.insert(1, '/home/shyldai/shyld/AiSani')
+sys.path.insert(1, '/home/shyldai/shyld/AiSani/control_codes')
+sys.path.insert(1, '/home/shyldai/shyld/AiSani/control_codes/device')
 
 #from cam_IR import run_camera
-from device import steer
-from cam_module import MyVideoCapture
+from control_codes.device import steer
+from control_codes.cam_module import MyVideoCapture
 #import IR_cam_frame
 #import RGB_cam_frame
 #import simple_RGB_cam_frame
