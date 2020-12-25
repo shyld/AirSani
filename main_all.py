@@ -20,10 +20,10 @@ import cv2
 import os
 from multiprocessing import Process
 import subprocess
-
-
-
 import sys
+
+subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
+
 # insert at 1, 0 is the script path (or '' in REPL)
 #sys.path.insert(1, '/home/shyldai/shyld/product_test')
 #sys.path.insert(1, './control_codes')
@@ -63,7 +63,7 @@ root = tkinter.Tk()
 
 #root.wm_title("Digital Microscope")
 
-root.wm_attributes('-type','dock')
+root.wm_attributes('-type','splash')
 
 root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
 root.focus_force()
@@ -150,7 +150,7 @@ RB.bind('<ButtonPress-1>', lambda event: password_set)
 #WIFI configuration
 
 def setting():
-    os.system("unity-control-center network")
+    subprocess.Popen(["unity-control-center network"], shell=True)
   #print('WIFI Setting:')
 
 R = tkinter.Button(root, text = "Connect to WIFI",width = 15,height=5,fg="blue",bd=4,command=setting)
@@ -670,7 +670,6 @@ App(root, "Shyld AI")
 #os.popen("bash lock_screen.txt")
 #subprocess.Popen(["bash", "lock_screen.txt"])
 root.mainloop()
-
 
 
 
