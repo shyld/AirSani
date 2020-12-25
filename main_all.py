@@ -22,7 +22,7 @@ from multiprocessing import Process
 import subprocess
 import sys
 
-subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
+#subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
 
 # insert at 1, 0 is the script path (or '' in REPL)
 #sys.path.insert(1, '/home/shyldai/shyld/product_test')
