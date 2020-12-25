@@ -20,6 +20,7 @@ import cv2
 import os
 from multiprocessing import Process
 import subprocess
+from subprocess import Popen
 import sys
 
 #subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
@@ -150,7 +151,7 @@ RB.bind('<ButtonPress-1>', lambda event: password_set)
 #WIFI configuration
 
 def setting():
-    subprocess.Popen(["unity-control-center network"], shell=True)
+    Popen(["unity-control-center network"], shell=True)
   #print('WIFI Setting:')
 
 R = tkinter.Button(root, text = "Connect to WIFI",width = 15,height=5,fg="blue",bd=4,command=setting)
