@@ -23,7 +23,8 @@ import subprocess
 from subprocess import Popen
 import sys
 
-Popen(["unity-control-center network"], shell=True)
+
+#Popen(["unity-control-center network"], shell=True)
 #subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
 
 # insert at 1, 0 is the script path (or '' in REPL)
