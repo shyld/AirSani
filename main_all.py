@@ -657,7 +657,7 @@ class App:
         #ret, frame = self.vid.get_processed_frame()
         #ret_2,frame_2=self.vid_2.get_processed_frame()
         ret,frame=self.vid_2.get_frame()
-        ret_2,frame_2=self.vid_2.get_frame()
+        ret_2,frame_2=self.vid.get_frame()
 
         if ret :
             

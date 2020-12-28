@@ -16,7 +16,7 @@ rate = framerate
 
 
 def gstreamer_pipeline(
-    sensor_id=0,
+    sensor_id=1,
     #ensor_mode=3,
     capture_width=capture_width,
     capture_height=capture_height,
@@ -25,6 +25,7 @@ def gstreamer_pipeline(
     framerate=rate,
     #flip_method=0,
 ):
+    #print('in function sensor_id: ', )
     return (
         "nvarguscamerasrc sensor-id=%d !" #sensor-mode=%d ! "
         "video/x-raw(memory:NVMM), "
@@ -53,6 +54,7 @@ class MyVideoCapture:
         # Open the video source
         #self.vid = cv2.VideoCapture(video_source)
         self.vid = cv2.VideoCapture(gstreamer_pipeline(sensor_id=sensor_id), cv2.CAP_GSTREAMER)
+        print('sensor_id: ',sensor_id)
 
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", video_source)
