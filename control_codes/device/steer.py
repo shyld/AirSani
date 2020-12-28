@@ -12,7 +12,7 @@ theta=[0,0,0,0]
 degree_steps = 64/5.62/2
 pixel_steps = (64/5.62/2)/13.8
 
-path = '/home/shyldai/shyld/zahra/control_codes/device/'
+path = '/home/shyldai/shyld/AirSani/control_codes/device/'
 
 
 # parse the command line
