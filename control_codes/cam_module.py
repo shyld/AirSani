@@ -2,7 +2,7 @@
 import cv2
 
 
-sensor_id=0
+#sensor_id=0
 capture_width = 640#1024
 capture_height = 480#768
 framerate = 20
