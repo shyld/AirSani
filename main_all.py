@@ -6,9 +6,9 @@ Created on Wed Dec  9 15:01:04 2020
 """
 
 import tkinter
-import numpy
+#import numpy
 from tkinter import *
-
+import numpy as np
 from tkinter import ttk
 
 import PIL
@@ -20,13 +20,10 @@ import cv2
 import os
 from multiprocessing import Process
 import subprocess
-from subprocess import Popen
+
+
+
 import sys
-
-
-#Popen(["unity-control-center network"], shell=True)
-subprocess.Popen(["python3", "/home/shyldai/shyld/AirSani/lock_on_main.py"])
-
 # insert at 1, 0 is the script path (or '' in REPL)
 #sys.path.insert(1, '/home/shyldai/shyld/product_test')
 #sys.path.insert(1, './control_codes')
@@ -38,6 +35,7 @@ sys.path.insert(1, '/home/shyldai/shyld/AiSani/control_codes/device')
 
 #from cam_IR import run_camera
 from control_codes.device import steer
+#from control_codes.RGB_cam_module import MyVideoCapture
 from control_codes.cam_module import MyVideoCapture
 #import IR_cam_frame
 #import RGB_cam_frame
@@ -66,7 +64,7 @@ root = tkinter.Tk()
 
 #root.wm_title("Digital Microscope")
 
-root.wm_attributes('-type','splash')
+root.wm_attributes('-type','dock')
 
 root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
 root.focus_force()
@@ -153,7 +151,7 @@ RB.bind('<ButtonPress-1>', lambda event: password_set)
 #WIFI configuration
 
 def setting():
-    Popen(["unity-control-center network"], shell=True)
+    os.system("unity-control-center network")
   #print('WIFI Setting:')
 
 R = tkinter.Button(root, text = "Connect to WIFI",width = 15,height=5,fg="blue",bd=4,command=setting)
@@ -183,7 +181,7 @@ R2.place(x=110,y=3)
 R2.bind('<Button-1>',lambda event: sel(R2["text"]))
 
 R3 = Radiobutton(root, text="Off", variable=var, value=3)
-
+R3.select()
 R3.place(x=230,y=3)
 R3.bind('<Button-1>',lambda event: sel(R3["text"]))
 
@@ -215,7 +213,7 @@ vx1 = StringVar()
 text1_unit1 = ttk.Entry(labelframe_1, width = 5, textvariable = vx1)
 
 text1_unit1.place(x=15,y=20)
-
+text1_unit1.insert(0,"0")
 
 
 
@@ -225,6 +223,7 @@ vy1 = StringVar()
 
 text2_unit1 = ttk.Entry(labelframe_1, width = 5, textvariable = vy1)
 text2_unit1.place(x=155,y=20)
+text2_unit1.insert(0,"0")
 
 
 def func1(event):
@@ -329,6 +328,7 @@ vx2 = StringVar()
 
 text1_unit2 = ttk.Entry(labelframe_2, width = 5, textvariable = vx2)
 text1_unit2.place(x=15,y=20)
+text1_unit2.insert(0,"0")
 
 
 vy2 = StringVar()
@@ -338,6 +338,7 @@ vy2 = StringVar()
 text2 = tkinter.IntVar()
 text2_unit2 = ttk.Entry(labelframe_2, width = 5, textvariable = vy2)
 text2_unit2.place(x=155,y=20)
+text2_unit2.insert(0,"0")
 
 def func2(event):
     print('UV2_X:',vx2.get())
@@ -427,12 +428,14 @@ vx3 = StringVar()
 
 text1_unit3 = ttk.Entry(labelframe_3, width = 5, textvariable = vx3)
 text1_unit3.place(x=15,y=20)
+text1_unit3.insert(0,"0")
 
 vy3 = StringVar()
 #sv.trace("w", lambda name, index, mode, sv=sv: callback("y_unit3:",sv))
 
 text2_unit3 = ttk.Entry(labelframe_3, width = 5, textvariable = vy3)
 text2_unit3.place(x=155,y=20)
+text2_unit3.insert(0,"0")
 
 
 def func3(event):
@@ -529,12 +532,14 @@ vx4 = StringVar()
 
 text1_unit4 = ttk.Entry(labelframe_4, width = 5, textvariable = vx4)
 text1_unit4.place(x=15,y=20)
+text1_unit4.insert(0,"0")
 
 
 vy4 = StringVar()
 #sv.trace("w", lambda name, index, mode, sv=sv: callback("y_unit4:",sv))
 text2_unit4 = ttk.Entry(labelframe_4, width = 5, textvariable = vy4)
 text2_unit4.place(x=155,y=20)
+text2_unit4.insert(0,"0")
 
 
 
@@ -629,10 +634,10 @@ class App:
         #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(sensor_id=0)
+        self.vid = MyVideoCapture(sensor_id=1)
         
         #self.video_source_2 = video
-        self.vid_2=MyVideoCapture(sensor_id=1)
+        self.vid_2=MyVideoCapture(sensor_id=0)
         
         # Create a canvas that can fit the above video source size
         
@@ -649,8 +654,11 @@ class App:
         
     def update(self):
         
-        ret, frame = self.vid.get_frame()
+        #ret, frame = self.vid.get_processed_frame()
+        #ret_2,frame_2=self.vid_2.get_processed_frame()
+        ret,frame=self.vid_2.get_frame()
         ret_2,frame_2=self.vid_2.get_frame()
+
         if ret :
             
             self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
@@ -673,7 +681,6 @@ App(root, "Shyld AI")
 #os.popen("bash lock_screen.txt")
 #subprocess.Popen(["bash", "lock_screen.txt"])
 root.mainloop()
-
 
 
 

@@ -12,7 +12,7 @@ theta=[0,0,0,0]
 degree_steps = 64/5.62/2
 pixel_steps = (64/5.62/2)/13.8
 
-
+path = '/home/shyldai/shyld/zahra/control_codes/device/'
 
 
 # parse the command line
@@ -95,8 +95,8 @@ class UV:
 			rho = -rho
 			phi_t = phi_t -180 
 
-		phi0 = np.load('UV_coordinates_phi.npy')
-		rho0 = np.load('UV_coordinates_rho.npy')
+		phi0 = np.load(path+'UV_coordinates_phi.npy')
+		rho0 = np.load(path+'UV_coordinates_rho.npy')
 		print('rho0,phi0: ', rho0,phi0)
 
 		delta_rho = rho - rho0[LED]
@@ -105,8 +105,8 @@ class UV:
 		rho0[LED] = rho
 		phi0[LED] = phi_t
 
-		np.save('UV_coordinates_phi', phi0)
-		np.save('UV_coordinates_rho', rho0)
+		np.save(path+'UV_coordinates_phi', phi0)
+		np.save(path+'UV_coordinates_rho', rho0)
 
 		# apply limits
 		d1 = -1*int(pixel_steps * delta_rho)
@@ -180,6 +180,7 @@ class UV:
 
 		p1,p2,q1,q2,l = self.get_pins(LED_id = LED)
 		self.UV_driver(x1= x, y1=y, uv=light_on,p1=p1,p2=p2,q1=q1,q2=q2,l=l,LED=LED)
+		print(LED,x,y,light_on)
 
 
 
