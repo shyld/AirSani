@@ -21,6 +21,8 @@ import os
 from multiprocessing import Process
 import subprocess
 
+global program_mode
+program_mode = 'manual'
 
 
 import sys
@@ -35,8 +37,8 @@ sys.path.insert(1, '/home/shyldai/shyld/AiSani/control_codes/device')
 
 #from cam_IR import run_camera
 from control_codes.device import steer
-#from control_codes.RGB_cam_module import MyVideoCapture
-from control_codes.cam_module import MyVideoCapture
+from control_codes.RGB_cam_module import MyVideoCapture
+#from control_codes.cam_module import MyVideoCapture
 #import IR_cam_frame
 #import RGB_cam_frame
 #import simple_RGB_cam_frame
@@ -162,8 +164,10 @@ R.bind('<ButtonPress-1>', lambda event: setting)
 
 
 ##############
-def sel(st):
-   print(st)
+def program_mode_set(mode):
+    global program_mode
+    program_mode = mode
+
    
 
 
@@ -173,17 +177,17 @@ R1 = Radiobutton(root, text="Manual", variable=var, value=1)
 #R1.pack( anchor = W )
 R1.place(x=5,y=3)
 
-R1.bind('<Button-1>',lambda event: sel(R1["text"]))
+R1.bind('<Button-1>',lambda event: program_mode_set('manual'))
 
 
 R2 = Radiobutton(root, text="Automatic", variable=var, value=2)
 R2.place(x=110,y=3)
-R2.bind('<Button-1>',lambda event: sel(R2["text"]))
+R2.bind('<Button-1>',lambda event: program_mode_set('auto'))
 
 R3 = Radiobutton(root, text="Off", variable=var, value=3)
 R3.select()
 R3.place(x=230,y=3)
-R3.bind('<Button-1>',lambda event: sel(R3["text"]))
+R3.bind('<Button-1>',lambda event: program_mode_set('manual'))
 
 
 
@@ -654,10 +658,21 @@ class App:
         
     def update(self):
         
-        #ret, frame = self.vid.get_processed_frame()
-        #ret_2,frame_2=self.vid_2.get_processed_frame()
-        ret,frame=self.vid_2.get_frame()
-        ret_2,frame_2=self.vid.get_frame()
+        # Select the program mode
+        if program_mode=='auto':
+            ret, frame = self.vid.get_processed_frame()#frame()#get_processed_frame()
+        else:
+            ret, frame = self.vid.get_frame()
+        
+        ret_2,frame_2=self.vid_2.get_frame()#frame()#get_processed_frame()
+        #print(frame.shape[0])
+
+        DISPLAY_WIDTH=640
+        DISPLAY_HEIGHT=480
+        frame = cv2.resize(frame, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
+        frame_2 = cv2.resize(frame_2, (DISPLAY_WIDTH, DISPLAY_HEIGHT))
+        #ret,frame=self.vid.get_frame()
+        #ret_2,frame_2=self.vid_2.get_frame()
 
         if ret :
             
