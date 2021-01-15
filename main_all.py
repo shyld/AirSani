@@ -638,10 +638,10 @@ class App:
         #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(sensor_id=1)
+        self.vid = MyVideoCapture(sensor_id=0)
         
         #self.video_source_2 = video
-        self.vid_2=MyVideoCapture(sensor_id=0)
+        self.vid_2=MyVideoCapture(sensor_id=1)
         
         # Create a canvas that can fit the above video source size
         
@@ -660,11 +660,11 @@ class App:
         
         # Select the program mode
         if program_mode=='auto':
-            ret_2, frame_2 = self.vid.get_processed_frame()#frame()#get_processed_frame()
+            ret, frame = self.vid.get_processed_frame()#frame()#get_processed_frame()
         else:
-            ret_2, frame_2 = self.vid.get_frame()
+            ret, frame = self.vid.get_frame()
         
-        ret,frame=self.vid_2.get_frame()#frame()#get_processed_frame()
+        ret_2,frame_2=self.vid_2.get_frame()#frame()#get_processed_frame()
         #print(frame.shape[0])
 
         DISPLAY_WIDTH=640
