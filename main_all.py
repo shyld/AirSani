@@ -660,11 +660,11 @@ class App:
         
         # Select the program mode
         if program_mode=='auto':
-            ret, frame = self.vid.get_processed_frame()#frame()#get_processed_frame()
+            ret_2, frame_2 = self.vid.get_processed_frame()#frame()#get_processed_frame()
         else:
-            ret, frame = self.vid.get_frame()
+            ret_2, frame_2 = self.vid.get_frame()
         
-        ret_2,frame_2=self.vid_2.get_frame()#frame()#get_processed_frame()
+        ret,frame=self.vid_2.get_frame()#frame()#get_processed_frame()
         #print(frame.shape[0])
 
         DISPLAY_WIDTH=640
