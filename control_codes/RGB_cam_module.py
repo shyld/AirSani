@@ -8,7 +8,7 @@
 
 import cv2
 import numpy as np
-from control_codes.csi_camera import CSI_Camera
+#from control_codes.csi_camera import CSI_Camera
 import time
 import datetime
 #from find_IR import find_light
@@ -16,7 +16,7 @@ import os
 from multiprocessing import Process
 
 from control_codes.person_detection.person_detection import person_detection
-from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
+#from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
 from control_codes import shared_variables
 shared_variables.init()
 #print('shared.variables.avoid_list', shared_variables.avoid_list)
@@ -36,14 +36,6 @@ def draw_label(cv_image, label_text, label_position):
     # You can get the size of the string with cv2.getTextSize here
     cv2.putText(cv_image, label_text, label_position, font_face, scale, color, 1, cv2.LINE_AA)
 
-# Read a frame from the camera, and draw the FPS on the image if desired
-# Return an image
-def read_camera(csi_camera,display_fps):
-    _ , camera_image=csi_camera.read()
-    if display_fps:
-        draw_label(camera_image, "Frames Displayed (PS): "+str(csi_camera.last_frames_displayed),(10,20))
-        draw_label(camera_image, "Frames Read (PS): "+str(csi_camera.last_frames_read),(10,40))
-    return camera_image
 
 # Good for 1280x720
 #DISPLAY_WIDTH=640
@@ -77,34 +69,34 @@ class MyVideoCapture:
 
     def __init__(self,sensor_id):
         #print('loading MyVideoCapture')
-        try:
+        path = os.path.dirname(os.path.abspath(__file__))
+        print('path: ', path)
+        if True:
+            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
+            frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
+            ret, frame1 = self.cap.read()
             #sensor_id = 1
-            self.left_camera = CSI_Camera()
-            self.left_camera.create_gstreamer_pipeline(
-                    capture_width=width,
-                    capture_height=height,
-                    sensor_id=sensor_id,
+            #self.left_camera = CSI_Camera()
+            #self.left_camera.create_gstreamer_pipeline(
+            #        capture_width=width,
+            #        capture_height=height,
+            #        sensor_id=sensor_id,
                     #sensor_mode=SENSOR_MODE_1080,
-                    framerate=20,
-                    flip_method=0,
-                    display_height=DISPLAY_HEIGHT,
-                    display_width=DISPLAY_WIDTH,
-            )
-            self.left_camera.open(self.left_camera.gstreamer_pipeline)
-            self.left_camera.start()
-            cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
+            #        framerate=20,
+            #        flip_method=0,
+            #        display_height=DISPLAY_HEIGHT,
+            #        display_width=DISPLAY_WIDTH,
+            #)
+            #self.left_camera.open(self.left_camera.gstreamer_pipeline)
+            #self.left_camera.start()
+            #cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
 
-            if (
-                not self.left_camera.video_capture.isOpened()
-             ):
-                # Cameras did not open, or no camera attached
 
-                print("Unable to open any cameras")
-                # TODO: Proper Cleanup
-                SystemExit(0)
 
           #try:
             ret, self.frame1 = self.get_frame()
+
             #print('self.frame1.shape', self.frame1.shape)
 
             person_scale= int(self.frame1.shape[0]/7)
@@ -113,18 +105,16 @@ class MyVideoCapture:
             print('Loading classes...')
             self.my_person_detection = person_detection(person_scale=person_scale)
             print('My_person_detection loaded')
-            self.my_pose_estimation = pose_estimation()
-            print('My pose loaded')
+            #self.my_pose_estimation = pose_estimation()
+            #print('My pose loaded')
 
 
 
             #img0=read_camera(self.left_camera,False)
 
-        except:
-            print('finally: init')
-            self.left_camera.stop()
-            self.left_camera.release()
-            cv2.destroyAllWindows()
+        #except:
+        #    print('finally: init')
+        #    cv2.destroyAllWindows()
 
 
         # Get the initial frame
@@ -158,30 +148,40 @@ class MyVideoCapture:
 
         return frame
 
+    def overlay_square(self, frame, x1,y1,x2,y2,color,alpha):
+        overlay = frame.copy()
+        output = frame.copy()
+        cv2.rectangle(overlay, (x1, y1), (x2, y2),color, -1)
+        cv2.addWeighted(overlay, alpha, output, 1 - alpha,0, output)
+        return output
 
     def draw_scores(self,frame):
+        shared_variables.read_scores_from_file()
         C = shared_variables.scored_spots
-        #print('draw_detections ', len(C))
+
+        print('********************** draw_scores ', len(C))
         for i in range(len(C)):
             #print("C.loc[i,'Left']: ",C.loc[i,'Left'])
             #print("C.loc[i,'Left']: ",C.iloc[i,'Left'])
             #print("C.loc[i,'Left']: ",C['Left'].iloc[i])
 
-            t,pr,x,y,sc = int(C['time'].iloc[i]), int(C['priority'].iloc[i]), int(C['i'].iloc[i]), int(C['j'].iloc[i]), int(C['score'].iloc[i])
+            t,pr,x,y,sc = C['time'].iloc[i], int(C['priority'].iloc[i]), int(C['i'].iloc[i]), int(C['j'].iloc[i]), int(C['score'].iloc[i])
             #print('detection: ', x1,x2,y1,y2) 
-            y1=y
-            y2=y+shared_variables.Coverage_size
-            x1=x
-            x2=x+shared_variables.Coverage_size
+            y1=y+ int(shared_variables.Cam_height/2)
+            y2=y+ int(shared_variables.Cam_height/2 + shared_variables.Coverage_size)
+            x1=x + int(shared_variables.Cam_width/2)
+            x2=x + int(shared_variables.Cam_width/2 +shared_variables.Coverage_size)
 
-            sub_img = frame[y1:y2, x1:x2]
-            white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
+            alpha = 0.3
+            frame = self.overlay_square(frame, x1,y1,x2,y2,(0,0,255),alpha)
+                #sub_img = frame[y1:y2, x1:x2]
+                #white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
 
-            res = cv2.addWeighted(sub_img, 0.5, white_rect, 0.5, 1.0)
+                #res = cv2.addWeighted(sub_img, 0.5, white_rect, 0.5, 1.0)
             # Putting the image back to its position
-            frame[y1:y2, x1:x2] = res
+                #frame[y1:y2, x1:x2] = res
 
-            cv2.putText(frame, "("+str(sc)+")", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 7, (255,0,0), 5, cv2.LINE_AA)
+            #cv2.putText(frame, "("+str(sc)+")", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 7, (255,0,0), 5, cv2.LINE_AA)
 
 
         return frame
@@ -191,7 +191,8 @@ class MyVideoCapture:
         
         try:
             #self.left_camera.start_counting_fps()
-            img=read_camera(self.left_camera,False)
+            ret, img=self.cap.read()
+            img = cv2.resize(img, (640,480))
             #print('RGB: ',img.shape[0])
             #img1 = pre_process(img1)
             #img = cv2.absdiff(self.img_ref, img1)
@@ -202,19 +203,21 @@ class MyVideoCapture:
             #cv2.putText(img, "("+str(cx)+","+str(cy)+")", (1000, 1000), cv2.FONT_HERSHEY_SIMPLEX, 7, (255,255,255), 5, cv2.LINE_AA)
         except:
     #if False:
-            print('finally: get_frame')
-            self.left_camera.stop()
-            self.left_camera.release()
-            cv2.destroyAllWindows()
+            print('error: get_frame')
+
             
         return True, img
             
 
     # apply detections
     def get_processed_frame(self):
+        # Resize the Frame;
+        #frame= cv2.resize(frame, (640,480))
+
         ret, self.frame1 = self.get_frame()
         time.sleep(0.1)
         ret, frame2 = self.get_frame()
+        #print('in get_processed_frame: frame1.shape, frame2.shape: ', frame1.shape, frame2.shape)
         #print('in get prosessed frame, ', ret)
         if ret:
             # Detect events
@@ -227,8 +230,15 @@ class MyVideoCapture:
 
             # Add the detections to the shared_variables
             shared_variables.add_detections(moving_areas, priority=2)
+            
+            #print('in RGB_cam, shared_variables.detected_coordinates', len(shared_variables.detected_coordinates))
             #print('len(shared_variables.detected_coordinates) ',len(shared_variables.detected_coordinates))
-            shared_variables.remove_old_scored_list()
+            
+            #shared_variables.remove_old_detection_list()
+            print('shared_variables.detected_coordinates', shared_variables.detected_coordinates)
+            print('shared_variables.scored_spots', shared_variables.scored_spots)
+            #shared_variables.remove_old_scored_list()
+            print('shared_variables.scored_spots', shared_variables.scored_spots)
         #shared_variables.add_detections(moving_areas, priority=2)
         #shared_variables.remove_old_detection_list()
             #shared_variables.add_still_people(still_centers)
@@ -239,7 +249,7 @@ class MyVideoCapture:
             #shared_variables.remove_old_avoid_list()
 
             # Touch Detection
-            print('in RGB_cam: moving_people', moving_people.shape)
+            #print('in RGB_cam: moving_people', moving_people.shape)
             if True:
                 for box in moving_people:
                     h,w = frame2.shape[0], frame2.shape[1] # rows and columns
@@ -255,7 +265,7 @@ class MyVideoCapture:
                         frame_region = frame2[y1:y2,x1:x2,:]
                         #print('**********',frame_region.shape)
                         
-                        frame_region, touch_spots = self.my_pose_estimation.detect_touch(frame_region)
+                        #frame_region, touch_spots = self.my_pose_estimation.detect_touch(frame_region)
                         
                         # Update shared variables
                         # if touch_spots.shape[0]>0:
@@ -267,6 +277,10 @@ class MyVideoCapture:
             # Draw the infected areas
             #frame2 = self.draw_detections(frame2)
             frame2 = self.draw_scores(frame2)
+
+            ## Write to the file
+            shared_variables.write_detections_to_file()
+            
 
         return ret, frame2
 

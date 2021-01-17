@@ -43,6 +43,10 @@ from control_codes.RGB_cam_module import MyVideoCapture
 #import RGB_cam_frame
 #import simple_RGB_cam_frame
 #from cam_module import MyVideoCapture
+
+subprocess.Popen(["python3", "control_codes/process_detections.py"], shell=True)
+
+
 ## Initialize 
 UV0 = steer.UV()
 
@@ -638,10 +642,10 @@ class App:
         #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(sensor_id=0)
+        self.vid = MyVideoCapture(sensor_id=1)
         
         #self.video_source_2 = video
-        self.vid_2=MyVideoCapture(sensor_id=1)
+        self.vid_2=MyVideoCapture(sensor_id=0)
         
         # Create a canvas that can fit the above video source size
         
