@@ -1,22 +1,19 @@
 import pandas as pd
 import datetime 
-import os
 
 #global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_current_coordinates
-PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 def init():
 	######### Setting Variables ########
-	global Cam_width, Cam_height, Coverage_size, min_score, max_score, UV_after_sec, freq_process, TEST
+	global Cam_width, Cam_height, Coverage_size, min_score, max_score, UV_after_sec, freq_process
 	Cam_width = 640
-	Cam_height = 480
+	Cam_heigh = 480
 	Coverage_size = 30
 	min_score = 1
 	max_score = 10
 	UV_after_sec = 1
 	freq_process = 2
-	TEST = False
 
 
 
@@ -27,16 +24,6 @@ def init():
 	avoid_list = pd.DataFrame({'time':[], 'Left':[], 'Right':[],'Top':[], 'Bottom':[]})
 	scored_spots = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
 	UV_coordinates = [[0,0],[0,0],[0,0],[0,0]]
-
-	# internal variables
-	global tf_detection, tf_scores, tf_UV
-	tf_detection=0
-	tf_scores=0
-	tf_UV = 0
-
-	global UV_spots
-	UV_spots = [0,0,0,0]
-
 
 def add_detections(boxes, priority):
 	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates
@@ -82,44 +69,7 @@ def add_still_people(still_centers):
 		#df_single_box = pd.DataFrame({'time':[t], 'priority':[priority], 'Left':[int(boxes[i,0])], 'Right':[int(boxes[i,2])],'Top':[int(boxes[i,1])], 'Bottom':[int(boxes[i,3])]})
 		#detected_coordinates = pd.concat([detected_coordinates, df_single_box])
 
-def write_detections_to_file():
-	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates,tf_detection,tf_scores
-
-	t = datetime.datetime.now()
-	t_s =  int(t.second)
-	if t_s!= tf_detection:
-		tf_detection = t_s
-		try:
-			df = pd.read_csv(PATH+'/shared_csv_files/detected_coordinates.csv')
-			df_new =  pd.concat([df, detected_coordinates])
-		except:
-			df_new=detected_coordinates 
-		detected_coordinates = pd.DataFrame({'time':[], 'priority':[] , 'Left':[], 'Right':[],'Top':[], 'Bottom':[]})
-		df_new.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
-		#df_priority = pd.read_csv('scored_spots.csv')
-def read_scores_from_file():
-
-	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates,tf_detection,tf_scores
-	t = datetime.datetime.now()
-	t_s =  int(t.second)
-	#print('read_scores_from_file(), ', t_s, tf_scores)
-	if t_s!= tf_scores:
-		#print('in the if *******************')
-		tf_score = t_s
-		try:
-			df = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
-			scored_spots =  pd.concat([df, scored_spots])
-			#print('in try: scored_spots len', len(scored_spots))
-		except:
-			#print('in except: scored_spots len', len(scored_spots))
-			scored_spots=scored_spots 
-		
-		df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
-		df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
-
-
-
 def test_variables():
 	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates
-	print('test_variables(): detected_coordinates ',detected_coordinates )
+	print('test_variables(): ',detected_coordinates )
 #print(detected_coordinates)

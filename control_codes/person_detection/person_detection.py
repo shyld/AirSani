@@ -2,7 +2,6 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-from control_codes import shared_variables
 import cv2
 import time
 
@@ -13,7 +12,6 @@ predefined_distance=1000
 t_no_person = 2 # seconds
 still_threshold = 0.05
 t_still = 5 # sec
-shared_variables.TEST = True
 #t_still_frq = 10/5
 
 # This class returns the boxes of detected people. The output is a n by 10 matrix, where the first
@@ -176,11 +174,11 @@ class person_detection:
 			if cv2.contourArea(contour) < contour_lower or cv2.contourArea(contour) > contour_upper :
 				continue
 			L.append((x, y, x+w, y+h))
-		#print('in person detection: L', L)
+		print('in person detection: L', L)
 		# Find moving people boxes based on motion boxes
 		M = self.find_moving_people(L=L)
 
-		#print('in person detection: M', M)
+		print('in person detection: M', M)
 		# Update people boxes
 		A = self.update_all_people(moving_persons_boxes=M)
 
