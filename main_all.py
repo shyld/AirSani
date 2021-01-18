@@ -651,10 +651,10 @@ class App:
         #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(sensor_id=1)
+        self.vid = MyVideoCapture(sensor_id=0)
         
         #self.video_source_2 = video
-        self.vid_2=MyVideoCapture(sensor_id=0)
+        self.vid_2=MyVideoCapture(sensor_id=1)
         
         # Create a canvas that can fit the above video source size
         
