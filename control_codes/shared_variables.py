@@ -11,7 +11,7 @@ def init():
 	global Cam_width, Cam_height, Coverage_size, min_score, max_score, UV_after_sec, freq_process, TEST
 	Cam_width = 640
 	Cam_height = 480
-	Coverage_size = 10
+	Coverage_size = 30
 	min_score = 1
 	max_score = 10
 	UV_after_sec = 1
@@ -29,9 +29,13 @@ def init():
 	UV_coordinates = [[0,0],[0,0],[0,0],[0,0]]
 
 	# internal variables
-	global tf_detection, tf_scores
+	global tf_detection, tf_scores, tf_UV
 	tf_detection=0
 	tf_scores=0
+	tf_UV = 0
+
+	global UV_spots
+	UV_spots = [0,0,0,0]
 
 
 def add_detections(boxes, priority):
@@ -110,8 +114,8 @@ def read_scores_from_file():
 			#print('in except: scored_spots len', len(scored_spots))
 			scored_spots=scored_spots 
 		
-		#df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
-		#df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
+		df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
+		df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 
 
 

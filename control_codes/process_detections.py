@@ -30,22 +30,7 @@ def set_log(s):
 
 set_log('F2')
 
-def apply_UV(df_score):
-	len_df = len(df_score)
-	print('in APPLY UV', len_df)
-	# load the dataset
-	# randomly select 4
-	if len_df ==0:
-		return df_score
 
-	R = np.random.randint(low=0,high=len_df,size=4)
-	# change the scores to -1
-	for i in range(4):
-		df_score.loc[R[i],'score']=-1
-
-	print('in APPLY UV >>>>>>>>>',df_score[df_score.score==-1])
-
-	return df_score
 	# Add a function in RGB that searches for -1 and removes from scores
 
 
@@ -126,8 +111,8 @@ while F_running:
 	#df_new.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
 
 	# Assign UV to the old df_score
-	print('*****************************************.     PAPPLYIN UV')
-	df_score = apply_UV(df_score)
+	#print('*****************************************.     PAPPLYIN UV')
+	#df_score = apply_UV(df_score)
 
 	# covert to correct data types
 	if len(df)>0:
