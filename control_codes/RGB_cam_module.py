@@ -8,7 +8,7 @@
 import pandas as pd
 import cv2
 import numpy as np
-#from control_codes.csi_camera import CSI_Camera
+from control_codes.csi_camera import CSI_Camera
 import time
 import datetime
 #from find_IR import find_light
@@ -16,7 +16,7 @@ import os
 from multiprocessing import Process
 
 from control_codes.person_detection.person_detection import person_detection
-#from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
+from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
 from control_codes import shared_variables
 shared_variables.init()
 #print('shared.variables.avoid_list', shared_variables.avoid_list)
