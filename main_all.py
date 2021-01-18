@@ -47,8 +47,8 @@ from control_codes.RGB_cam_module import MyVideoCapture
 
 path = os.path.dirname(os.path.abspath(__file__))
 #print('path: ', path)
-print('shared_variables.TEST', shared_variables.TEST)
-print(path+"/control_codes/process_detections.py")
+#print('shared_variables.TEST', shared_variables.TEST)
+#print(path+"/control_codes/process_detections.py")
 
 #with open(path+"/control_codes/shared_csv_files/F2_log.csv","wb") as out, open(path+"/control_codes/shared_csv_files/F2_log_err.csv","wb") as err:
 subprocess.Popen(["python3 "+ path+"/control_codes/process_detections.py"],close_fds=True, shell=True) # stdout=out, stderr=err, 
