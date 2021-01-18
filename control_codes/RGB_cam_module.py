@@ -8,7 +8,7 @@
 import pandas as pd
 import cv2
 import numpy as np
-#from control_codes.csi_camera import CSI_Camera
+from control_codes.csi_camera import CSI_Camera
 import time
 import datetime
 #from find_IR import find_light
@@ -16,7 +16,7 @@ import os
 from multiprocessing import Process
 
 from control_codes.person_detection.person_detection import person_detection
-#from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
+from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
 from sklearn.neighbors import NearestNeighbors
 
 from control_codes import shared_variables
@@ -76,25 +76,29 @@ class MyVideoCapture:
         path = os.path.dirname(os.path.abspath(__file__))
         print('path: ', path)
         if True:
-            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
-            frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
-            ret, frame1 = self.cap.read()
-            #sensor_id = 1
-            #self.left_camera = CSI_Camera()
-            #self.left_camera.create_gstreamer_pipeline(
-            #        capture_width=width,
-            #        capture_height=height,
-            #        sensor_id=sensor_id,
+            self.left_camera = CSI_Camera()
+            self.left_camera.create_gstreamer_pipeline(
+                    capture_width=width,
+                    capture_height=height,
+                    sensor_id=sensor_id,
                     #sensor_mode=SENSOR_MODE_1080,
-            #        framerate=20,
-            #        flip_method=0,
-            #        display_height=DISPLAY_HEIGHT,
-            #        display_width=DISPLAY_WIDTH,
-            #)
-            #self.left_camera.open(self.left_camera.gstreamer_pipeline)
-            #self.left_camera.start()
-            #cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
+                    framerate=20,
+                    flip_method=0,
+                    display_height=DISPLAY_HEIGHT,
+                    display_width=DISPLAY_WIDTH,
+            )
+            self.left_camera.open(self.left_camera.gstreamer_pipeline)
+            self.left_camera.start()
+            cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
+
+            if (
+                not self.left_camera.video_capture.isOpened()
+             ):
+                # Cameras did not open, or no camera attached
+
+                print("Unable to open any cameras")
+                # TODO: Proper Cleanup
+                SystemExit(0)
 
 
 
