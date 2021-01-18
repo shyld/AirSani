@@ -72,10 +72,9 @@ def pre_process(img):
 class MyVideoCapture:
 
     def __init__(self,sensor_id):
-        #print('loading MyVideoCapture')
-        path = os.path.dirname(os.path.abspath(__file__))
-        print('path: ', path)
-        if True:
+        
+        try:
+            #sensor_id = 1
             self.left_camera = CSI_Camera()
             self.left_camera.create_gstreamer_pipeline(
                     capture_width=width,
@@ -100,11 +99,8 @@ class MyVideoCapture:
                 # TODO: Proper Cleanup
                 SystemExit(0)
 
-
-
           #try:
             ret, self.frame1 = self.get_frame()
-
             #print('self.frame1.shape', self.frame1.shape)
 
             person_scale= int(self.frame1.shape[0]/7)
@@ -113,8 +109,19 @@ class MyVideoCapture:
             print('Loading classes...')
             self.my_person_detection = person_detection(person_scale=person_scale)
             print('My_person_detection loaded')
-            #self.my_pose_estimation = pose_estimation()
-            #print('My pose loaded')
+            self.my_pose_estimation = pose_estimation()
+            print('My pose loaded')
+
+
+
+            #img0=read_camera(self.left_camera,False)
+
+        except:
+            print('finally: init')
+            self.left_camera.stop()
+            self.left_camera.release()
+            cv2.destroyAllWindows()
+
 
 
 
