@@ -30,6 +30,26 @@ def set_log(s):
 
 set_log('F2')
 
+def apply_UV(df_score):
+	len_df = len(df_score)
+	print('in APPLY UV', len_df)
+	# load the dataset
+	# randomly select 4
+	if len_df ==0:
+		return df_score
+
+	R = np.random.randint(low=0,high=len_df,size=4)
+	# change the scores to -1
+	for i in range(4):
+		df_score.loc[R[i],'score']=-1
+
+	print('in APPLY UV >>>>>>>>>',df_score[df_score.score==-1])
+
+	return df_score
+	# Add a function in RGB that searches for -1 and removes from scores
+
+
+
 
 #shared_variables.init()
 print('opened process_detections.py')
@@ -57,11 +77,14 @@ t = datetime.datetime.now()
 #df = pd.DataFrame({'F1':[t], 'F2':[t], 'F3':[t]})
 #df.to_csv('check_error.csv',index=False)
 
+ 
+
+
 # A function to check the stopping rule
 def check_stop(b0,b1):
 	F_running = True
 	if b1 != b0:
-		print('Check_stop')
+		#print('Check_stop')
 		b0 = b1
 		df0 = pd.read_csv(path+'/shared_csv_files/onoff.csv')
 		F_running = (df0[df0['arguments']=='F2']['value'].iloc[0]=='TRUE') & (df0[df0['arguments']=='F0']['value'].iloc[0]=='TRUE')
@@ -77,8 +100,8 @@ while F_running:
 	b1 =  int(t.second)
 	b0, F_running = check_stop(b0,b1)
 
-	print('process_detections running: inside the while loop ')
-	time.sleep(0.2)
+	#print('process_detections running: inside the while loop ')
+	time.sleep(4.0)
 
 	
 	# Check_stop every x sec
@@ -102,6 +125,9 @@ while F_running:
 	#print('process_detections: df_score:',df_score)
 	#df_new.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
 
+	# Assign UV to the old df_score
+	print('*****************************************.     PAPPLYIN UV')
+	df_score = apply_UV(df_score)
 
 	# covert to correct data types
 	if len(df)>0:
@@ -111,11 +137,12 @@ while F_running:
 
 
 	if len(df)>0:
+		#print('len_df>0')
 		#print('*********** shared_variables.detected_coordinates: ', len(shared_variables.detected_coordinates))
 
 
 		for i in range(len(df)):
-			print(i, len(df) )
+			#print(i, len(df) )
 			#print('len(df) ' , len(df_remaining))
 
 			x1 = math.floor((df.Left.iloc[i] - shared_variables.Cam_width/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
@@ -123,7 +150,7 @@ while F_running:
 			y1 = math.floor((df.Top.iloc[i] - shared_variables.Cam_height/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
 			y2 = math.floor((df.Bottom.iloc[i] - shared_variables.Cam_height/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
 
-			print('-------------------- df.Left.iloc[i], x1: ', df.Left.iloc[i], x1, shared_variables.Cam_width, shared_variables.Coverage_size)
+			#print('-------------------- df.Left.iloc[i], x1: ', df.Left.iloc[i], x1, shared_variables.Cam_width, shared_variables.Coverage_size)
 
 			t_detection = df.time.iloc[i]
 			priority = df.priority.iloc[i]
@@ -132,12 +159,12 @@ while F_running:
 				for j1 in np.arange(y1,y2, shared_variables.Coverage_size):
 					#print(i1,j1)
 
-					idx  = (df_score['i']==i1) & (df_score['j']==j1)
+					idx  = (df_score['i']==i1) & (df_score['j']==j1) & (df_score['score']!=-1)
 					df_search = df_score[idx]
 
 					
 					if len(df_search)>0:
-						print('df_search &&&&&&&.        &&&&&&')
+						#print('df_search &&&&&&&.        &&&&&&')
 						# update score
 						new_score = np.min([df_search['score'].values[0]+1, shared_variables.max_score])
 						shared_variables.scored_spots.loc[idx, 'score'] = new_score
@@ -155,8 +182,12 @@ while F_running:
 
 		# Save updates to the file
 		df.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
+		print('len(df_score)  ', len(df_score))
 		df_score.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 	
+
+	print('in process_detection END >>>>>>>>>',df_score[df_score.score==-1])
+
 	## update check_error file
 	df_check = pd.read_csv(PATH+'/shared_csv_files/log.csv')
 	df_check['F2'] = pd.to_datetime(df_check['F2'])

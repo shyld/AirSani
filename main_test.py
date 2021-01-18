@@ -44,18 +44,18 @@ while F_running:
 	b1 =  int(t.second)
 	b0, F_running = check_stop(b0,b1)
 
-	print('shared_variables.TEST', shared_variables.TEST)
-	try:
-	#if True:
+	#print('shared_variables.TEST', shared_variables.TEST)
+	#try:
+	if True:
 		ret, frame = vid.get_processed_frame()
-		print('##### ORIGINAL FRAME SIZE #####: ', frame.shape)
+		#print('##### ORIGINAL FRAME SIZE #####: ', frame.shape)
 
 		out.write(cv2.resize(frame, (1280,720)))
 		cv2.imshow("feed", cv2.resize(frame, (600,400)))
 
 		if cv2.waitKey(100) == 27:
 			break
-	except:
-		os.killpg(os.getpid(), signal.SIGTERM)
+	#except:
+	#	os.killpg(os.getpid(), signal.SIGTERM)
 
 os.killpg(os.getpid(), signal.SIGTERM)

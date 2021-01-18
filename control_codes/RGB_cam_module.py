@@ -5,7 +5,7 @@
 # https://docs.opencv.org/3.3.1/d7/d8b/tutorial_py_face_detection.html
 # On the Jetson Nano, OpenCV comes preinstalled
 # Data files are in /usr/sharc/OpenCV
-
+import pandas as pd
 import cv2
 import numpy as np
 #from control_codes.csi_camera import CSI_Camera
@@ -20,6 +20,8 @@ from control_codes.person_detection.person_detection import person_detection
 from control_codes import shared_variables
 shared_variables.init()
 #print('shared.variables.avoid_list', shared_variables.avoid_list)
+
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
@@ -72,26 +74,34 @@ class MyVideoCapture:
         path = os.path.dirname(os.path.abspath(__file__))
         print('path: ', path)
         if True:
-            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
-            frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
-            ret, frame1 = self.cap.read()
+            #self.cap = cv2.VideoCapture(path+'/media/03.mp4')
+            #frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            #frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
+            #ret, frame1 = self.cap.read()
             #sensor_id = 1
-            #self.left_camera = CSI_Camera()
-            #self.left_camera.create_gstreamer_pipeline(
-            #        capture_width=width,
-            #        capture_height=height,
-            #        sensor_id=sensor_id,
+            self.left_camera = CSI_Camera()
+            self.left_camera.create_gstreamer_pipeline(
+                    capture_width=width,
+                    capture_height=height,
+                    sensor_id=sensor_id,
                     #sensor_mode=SENSOR_MODE_1080,
-            #        framerate=20,
-            #        flip_method=0,
-            #        display_height=DISPLAY_HEIGHT,
-            #        display_width=DISPLAY_WIDTH,
-            #)
-            #self.left_camera.open(self.left_camera.gstreamer_pipeline)
-            #self.left_camera.start()
-            #cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
+                    framerate=20,
+                    flip_method=0,
+                    display_height=DISPLAY_HEIGHT,
+                    display_width=DISPLAY_WIDTH,
+            )
+            self.left_camera.open(self.left_camera.gstreamer_pipeline)
+            self.left_camera.start()
+            cv2.namedWindow('IR Image', cv2.WINDOW_AUTOSIZE)
 
+            if (
+                not self.left_camera.video_capture.isOpened()
+             ):
+                # Cameras did not open, or no camera attached
+
+                print("Unable to open any cameras")
+                # TODO: Proper Cleanup
+                SystemExit(0)
 
 
           #try:
@@ -138,15 +148,11 @@ class MyVideoCapture:
             #print("C.loc[i,'Left']: ",C['Left'].iloc[i])
 
             x1,x2,y1,y2 = int(C['Left'].iloc[i]), int(C['Right'].iloc[i]), int(C['Top'].iloc[i]), int(C['Bottom'].iloc[i])
-            #print('detection: ', x1,x2,y1,y2) 
-            sub_img = frame[y1:y2, x1:x2]
-            white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
-
-            res = cv2.addWeighted(sub_img, 0.5, white_rect, 0.5, 1.0)
-            # Putting the image back to its position
-            frame[y1:y2, x1:x2] = res
+            alpha = 0.7
+            frame = self.overlay_square(frame, x1,y1,x2,y2,(0,0,255),alpha)
 
         return frame
+
 
     def overlay_square(self, frame, x1,y1,x2,y2,color,alpha):
         overlay = frame.copy()
@@ -185,6 +191,58 @@ class MyVideoCapture:
 
 
         return frame
+
+
+    def draw_UV(self, frame):
+
+        try:
+            shared_variables.read_scores_from_file()
+            C = shared_variables.scored_spots
+            print('in score_df try', len(C))
+            #df_new =  pd.concat([df, detected_coordinates])
+        except:
+            df_score = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
+            print('in score_df except', len(df_score))
+
+        df_filter = C[C['score']==-1]
+        
+        #print('IN DRAW UV', idx)
+        if len(df_filter)==0:
+            print('ZERO -1 LEN')
+            return frame
+
+        df_UV = C[C['score']==-1]
+
+        #print('00000000      df_UV len', df_UV)
+
+        #print(df_score[df_score['score']==-1])
+
+        #print('df_score: ', df_score)
+        if len(df_UV)>0:
+            print('111111111     df_UV len', len(df_UV))
+            # remove the indexes
+            
+            #df_score  = df_score[idx].drop().reset_index(drop=True)
+            #df_score.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
+    
+            # plot 
+            for i in range(len(df_UV)):
+
+                t,pr,x,y,sc = C['time'].iloc[i], int(C['priority'].iloc[i]), int(C['i'].iloc[i]), int(C['j'].iloc[i]), int(C['score'].iloc[i])
+                
+                y1=y+ int(shared_variables.Cam_height/2)
+                y2=y+ int(shared_variables.Cam_height/2 + shared_variables.Coverage_size)
+                x1=x + int(shared_variables.Cam_width/2)
+                x2=x + int(shared_variables.Cam_width/2 +shared_variables.Coverage_size)
+
+                print('^^^^^^^ UV Apply ^^^^^^: ', x1,x2,y1,y2) 
+                alpha = 0.7
+                frame = self.overlay_square(frame, x1,y1,x2,y2,(0,255,0),alpha)
+        return frame
+
+
+
+
 
 
     def get_frame(self):
@@ -235,10 +293,10 @@ class MyVideoCapture:
             #print('len(shared_variables.detected_coordinates) ',len(shared_variables.detected_coordinates))
             
             #shared_variables.remove_old_detection_list()
-            print('shared_variables.detected_coordinates', shared_variables.detected_coordinates)
-            print('shared_variables.scored_spots', shared_variables.scored_spots)
+            #print('shared_variables.detected_coordinates', shared_variables.detected_coordinates)
+            #print('shared_variables.scored_spots', shared_variables.scored_spots)
             #shared_variables.remove_old_scored_list()
-            print('shared_variables.scored_spots', shared_variables.scored_spots)
+            #print('shared_variables.scored_spots', shared_variables.scored_spots)
         #shared_variables.add_detections(moving_areas, priority=2)
         #shared_variables.remove_old_detection_list()
             #shared_variables.add_still_people(still_centers)
@@ -275,11 +333,14 @@ class MyVideoCapture:
 
                 
             # Draw the infected areas
-            #frame2 = self.draw_detections(frame2)
+            frame2 = self.draw_detections(frame2)
             frame2 = self.draw_scores(frame2)
+            print()
+            frame2 = self.draw_UV(frame2)
 
             ## Write to the file
             shared_variables.write_detections_to_file()
+
             
 
         return ret, frame2
