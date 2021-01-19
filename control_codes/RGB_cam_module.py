@@ -163,7 +163,7 @@ class MyVideoCapture:
 
             x1,x2,y1,y2 = int(C['Left'].iloc[i]), int(C['Right'].iloc[i]), int(C['Top'].iloc[i]), int(C['Bottom'].iloc[i])
             alpha = 0.7
-            frame = self.overlay_square(frame, x1,y1,x2,y2,(0,0,255),alpha)
+            frame = self.overlay_square(frame, x1,y1,x2,y2,(255,0,0),alpha)
 
         return frame
 
@@ -193,7 +193,7 @@ class MyVideoCapture:
             x2=x + int(shared_variables.Cam_width/2 +shared_variables.Coverage_size)
 
             alpha = 0.3
-            frame = self.overlay_square(frame, x1,y1,x2,y2,(0,0,255),alpha)
+            frame = self.overlay_square(frame, x1,y1,x2,y2,(255,0,0),alpha)
                 #sub_img = frame[y1:y2, x1:x2]
                 #white_rect = np.ones(sub_img.shape, dtype=np.uint8) * 255
 
