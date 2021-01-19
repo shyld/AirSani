@@ -440,14 +440,15 @@ class MyVideoCapture:
 
                 
             # Draw the infected areas
-            print('CHECK 1',len(shared_variables.scored_spots))
-            frame2 = self.draw_detections(frame2)
-            print('CHECK 2',len(shared_variables.scored_spots))
+            #print('CHECK 1',len(shared_variables.scored_spots))
+            
+            #print('CHECK 2',len(shared_variables.scored_spots))
             frame2 = self.draw_scores(frame2)
-            print('CHECK 3',len(shared_variables.scored_spots))
+            #print('CHECK 3',len(shared_variables.scored_spots))
             frame2 = self.draw_UV(frame2)
-            print('CHECK 4',len(shared_variables.scored_spots))
-
+            #print('CHECK 4',len(shared_variables.scored_spots))
+            frame2 = self.draw_detections(frame2)
+            
             ## Write to the file
             shared_variables.write_detections_to_file()
             print('CHECK 5',len(shared_variables.scored_spots))
