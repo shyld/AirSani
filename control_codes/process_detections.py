@@ -167,11 +167,11 @@ while F_running:
 
 		# Save updates to the file
 		df.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
-		print('len(df_score)  ', len(df_score))
+		#print('len(df_score)  ', len(df_score))
 		df_score.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 	
 
-	print('in process_detection END >>>>>>>>>',df_score[df_score.score==-1])
+	#print('in process_detection END >>>>>>>>>',df_score[df_score.score==-1])
 
 	## update check_error file
 	df_check = pd.read_csv(PATH+'/shared_csv_files/log.csv')

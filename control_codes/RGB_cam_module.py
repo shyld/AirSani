@@ -207,9 +207,13 @@ class MyVideoCapture:
         return frame
 
     def get_random_UV_loc(self,X):
+        R = []
+        if X.shape[0]<4:
+            return R
+
         len_df = len(shared_variables.scored_spots)
 
-        R = []
+        
         u=0
         while len(R)<4 and u<20:
             u+=1
@@ -218,9 +222,9 @@ class MyVideoCapture:
             neigh.fit(X)
             x,y = shared_variables.scored_spots.loc[r,'i'],shared_variables.scored_spots.loc[r,'j']
             D,I = neigh.kneighbors([[x,y]], n_neighbors=2, return_distance=True)
-            print('################. X',X)
-            print('################. x,y',x,y)
-            print('################. D',D)
+            #print('################. X',X)
+            #print('################. x,y',x,y)
+            #print('################. D',D)
             if np.sum(D[0,0]<100)==0:
                 R.append(r)
 
@@ -240,9 +244,9 @@ class MyVideoCapture:
 
             # clear previous spots
             df_filter = shared_variables.scored_spots[shared_variables.scored_spots['score']==-1]
-            print('LEN 1', len(shared_variables.scored_spots))
+            #print('LEN 1', len(shared_variables.scored_spots))
             shared_variables.scored_spots = shared_variables.scored_spots[shared_variables.scored_spots['score']>0].reset_index(drop=True)
-            print('LEN 2', len(shared_variables.scored_spots))
+            #print('LEN 2', len(shared_variables.scored_spots))
             
 
             # Assign new spots
@@ -250,7 +254,7 @@ class MyVideoCapture:
             #df_score = df_score.reset_index(drop=True)
 
             len_df = len(shared_variables.scored_spots)
-            print('in APPLY UV', len_df)
+            #print('in APPLY UV', len_df)
             # load the dataset
             # randomly select 4
             if len_df ==0:
@@ -261,9 +265,10 @@ class MyVideoCapture:
             X1 = (X1/2 - shared_variables.Cam_width/2).astype(int)
             X2 = (X2/2 - shared_variables.Cam_height/2).astype(int)
 
-            print('X1.shape', X1.shape)
+            #print('X1.shape', X1.shape)
             X = np.concatenate((X1,X2),axis=1)
-            print('X.shape', X.shape)
+            
+            #print('X.shape', X.shape)
             
             R = self.get_random_UV_loc(X)
 
@@ -277,7 +282,7 @@ class MyVideoCapture:
 
             for i in range(len(R)):
                 shared_variables.scored_spots.loc[shared_variables.UV_spots[i],'score']=-1
-                print('df_score.loc[R[i]]',shared_variables.scored_spots.loc[shared_variables.UV_spots[i]])
+                #print('df_score.loc[R[i]]',shared_variables.scored_spots.loc[shared_variables.UV_spots[i]])
         #except:
             #    print('ERRROR IN INDEX')
 
@@ -307,7 +312,7 @@ class MyVideoCapture:
         
         #print('IN DRAW UV', idx)
         if len(df_filter)==0:
-            print('ZERO -1 LEN')
+            #print('ZERO -1 LEN')
             return frame
 
         df_UV = C[C['score']==-1]
@@ -318,7 +323,7 @@ class MyVideoCapture:
 
         #print('df_score: ', df_score)
         if len(df_UV)>0:
-            print('111111111     df_UV len', len(df_UV))
+            #print('111111111     df_UV len', len(df_UV))
             # remove the indexes
             
             #df_score  = df_score[idx].drop().reset_index(drop=True)
@@ -334,7 +339,7 @@ class MyVideoCapture:
                 x1=x + int(shared_variables.Cam_width/2)
                 x2=x + int(shared_variables.Cam_width/2 +shared_variables.Coverage_size)
 
-                print('^^^^^^^ UV Apply ^^^^^^: ', x1,x2,y1,y2) 
+                #print('^^^^^^^ UV Apply ^^^^^^: ', x1,x2,y1,y2) 
                 alpha = 0.7
                 frame = self.overlay_square(frame, x1,y1,x2,y2,(0,255,0),alpha)
         return frame
