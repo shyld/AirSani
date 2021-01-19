@@ -111,6 +111,9 @@ class person_detection:
 
 		# Update the distances from the previous positions as well as time for the moving boxes
 		nbrs = NearestNeighbors(n_neighbors=1).fit(OLD[:,:2])
+		if final_list.ndim==1:
+			final_list= np.reshape(final_list, (1,2))
+			
 		distances, indices = nbrs.kneighbors(final_list[:,:2])
 		
 		# update the recent movement distances every second
