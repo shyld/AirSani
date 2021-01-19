@@ -22,7 +22,7 @@ from multiprocessing import Process
 import subprocess
 
 global program_mode
-program_mode = 'manual'
+program_mode = 'off'
 
 
 import sys
@@ -200,7 +200,7 @@ R2.bind('<Button-1>',lambda event: program_mode_set('auto'))
 R3 = Radiobutton(root, text="Off", variable=var, value=3)
 R3.select()
 R3.place(x=230,y=3)
-R3.bind('<Button-1>',lambda event: program_mode_set('manual'))
+R3.bind('<Button-1>',lambda event: program_mode_set('off'))
 
 
 
@@ -250,7 +250,8 @@ def func1(event):
     #
     #vx1.get() = np.min([np.max([vx1.get(), -300]), 300])
     # UV go
-    UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = UV0.light_on[0])
+    if program_mode!='off':
+        UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = UV0.light_on[0])
 
     #print(text2_unit1.get())
 text1_unit1.bind('<Return>', func1)
@@ -284,7 +285,8 @@ def turnon1():
         myCanvas1.itemconfig(Rbutton1, fill="green")
         x1=1
         print("Turn On")
-        UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = True)
+        if program_mode!='off':
+            UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = True)
 
         
     elif x1==1:
@@ -293,7 +295,8 @@ def turnon1():
         myCanvas1.itemconfig(Rbutton1, fill="red")
         x1=0
         print("Turn Off")
-        UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = False)
+        if program_mode!='off':
+            UV0.UV_go(LED=0,x=3*trunc(vx1.get()),y=3*trunc(vy1.get()),light_on = False)
 
 
     
@@ -361,7 +364,8 @@ def func2(event):
     print('UV2_X:',vx2.get())
     print('UV2_Y:',vy2.get())
 
-    UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = UV0.light_on[1])
+    if program_mode!='off':
+        UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = UV0.light_on[1])
 
     #print(text2_unit1.get())
 text1_unit2.bind('<Return>', func2)
@@ -395,7 +399,8 @@ def turnon2():
         myCanvas2.itemconfig(Rbutton2, fill="green")
         x2=1
         print("Turn On")
-        UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = True)
+        if program_mode!='off':
+            UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = True)
         
     elif x2==1:
         
@@ -403,7 +408,8 @@ def turnon2():
         myCanvas2.itemconfig(Rbutton2, fill="red")
         x2=0
         print("Turn Off")
-        UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = False)
+        if program_mode!='off':
+            UV0.UV_go(LED=1,x=3*trunc(vx2.get()),y=3*trunc(vy2.get()),light_on = False)
 
         
        
@@ -459,7 +465,8 @@ def func3(event):
     print('UV3_X:',vx3.get())
     print('UV3_Y:',vy3.get())
 
-    UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = UV0.light_on[2])
+    if program_mode!='off':
+        UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = UV0.light_on[2])
 
     #print(text2_unit1.get())
 text1_unit3.bind('<Return>', func3)
@@ -495,7 +502,8 @@ def turnon3():
         myCanvas3.itemconfig(Rbutton3, fill="green")
         x3=1
         print("Turn On")
-        UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = True)
+        if program_mode!='off':
+            UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = True)
         
     elif x3==1:
         
@@ -504,7 +512,8 @@ def turnon3():
 
         x3=0
         print("Turn Off")
-        UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = False)
+        if program_mode!='off':
+            UV0.UV_go(LED=2,x=3*trunc(vx3.get()),y=3*trunc(vy3.get()),light_on = False)
 
         
        
@@ -564,7 +573,8 @@ def func4(event):
     print('UV4_X:',vx4.get())
     print('UV4_Y:',vy4.get())
 
-    UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = UV0.light_on[3])
+    if program_mode!='off':
+        UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = UV0.light_on[3])
 
     #print(text2_unit1.get())
 text1_unit4.bind('<Return>', func4)
@@ -601,7 +611,8 @@ def turnon4():
 
         x4=1
         print("Turn On")
-        UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = True)
+        if program_mode!='off':
+            UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = True)
         
     elif x4==1:
         
@@ -609,7 +620,8 @@ def turnon4():
         myCanvas4.itemconfig(Rbutton4, fill="red")
         x4=0
         print("Turn Off")
-        UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = False)
+        if program_mode!='off':
+            UV0.UV_go(LED=3,x=3*trunc(vx4.get()),y=3*trunc(vy4.get()),light_on = False)
 
         
  
