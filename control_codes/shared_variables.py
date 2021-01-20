@@ -64,13 +64,13 @@ def remove_old_avoid_list():
 def remove_old_detection_list():
 	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates
 	t = datetime.datetime.now()
-	detected_coordinates = detected_coordinates[detected_coordinates['time']>=t-datetime.timedelta(seconds=2)]
+	detected_coordinates = detected_coordinates[pd.to_datetime(detected_coordinates['time'])>=t-datetime.timedelta(seconds=2)]
 	#print('remove')
 
 def remove_old_scored_list():
 	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates
 	t = datetime.datetime.now()
-	scored_spots = scored_spots[scored_spots['time']>=t-datetime.timedelta(seconds=5)]
+	scored_spots = scored_spots[pd.to_datetime(scored_spots['time'])>=t-datetime.timedelta(seconds=20)]
 
 
 # For Mohammad to update:

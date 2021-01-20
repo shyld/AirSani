@@ -19,7 +19,7 @@ subprocess.Popen(["python3 "+ path+"/control_codes/process_detections.py"],close
 #out, err = p.communicate()  # This will get you output
 #print('err', out, err)
 
-vid = MyVideoCapture(sensor_id=1)
+vid = MyVideoCapture(sensor_id=-1)
 
 fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
 out = cv2.VideoWriter("output.avi", fourcc, 5.0, (1280,720)) # width, height
