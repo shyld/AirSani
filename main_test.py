@@ -6,6 +6,7 @@ from control_codes import shared_variables
 import datetime
 from control_codes.RGB_cam_module import MyVideoCapture
 import pandas as pd
+import time
 
 path = os.path.dirname(os.path.abspath(__file__))
 #print('path: ', path)
@@ -55,6 +56,7 @@ while F_running:
 
 		if cv2.waitKey(100) == 27:
 			break
+		#time.sleep(1)
 	#except:
 	#	os.killpg(os.getpid(), signal.SIGTERM)
 

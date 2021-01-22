@@ -239,8 +239,11 @@ class MyVideoCapture:
             #print('CHECK 1',len(shared_variables.scored_spots))
             
             #print('CHECK 2',len(shared_variables.scored_spots))
+            # Update scores from file (once every sec)
+            shared_variables.update_scores_from_file()
+
             frame2 = draw_scores(frame2)
-            #print('CHECK 3',len(shared_variables.scored_spots))
+            print('CHECK 3',len(shared_variables.scored_spots))
             frame2 = draw_UV(frame2)
             #print('CHECK 4',len(shared_variables.scored_spots))
             frame2 = draw_detections(frame2)
@@ -250,7 +253,7 @@ class MyVideoCapture:
             print('CHECK 5',len(shared_variables.scored_spots))
 
             # remove old items
-            shared_variables.remove_old_scored_list()
+            #shared_variables.remove_old_scored_list()
 
             
 

@@ -97,7 +97,7 @@ def write_detections_to_file():
 		detected_coordinates = pd.DataFrame({'time':[], 'priority':[] , 'Left':[], 'Right':[],'Top':[], 'Bottom':[]})
 		df_new.to_csv(PATH+'/shared_csv_files/detected_coordinates.csv',index=False)
 		#df_priority = pd.read_csv('scored_spots.csv')
-def read_scores_from_file():
+def update_scores_from_file():
 
 	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates,tf_detection,tf_scores
 	t = datetime.datetime.now()
@@ -107,15 +107,15 @@ def read_scores_from_file():
 		#print('in the if *******************')
 		tf_score = t_s
 		try:
-			df = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
-			scored_spots =  pd.concat([df, scored_spots])
+			scored_spots = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
+			#scored_spots =  pd.concat([df, scored_spots])
 			#print('in try: scored_spots len', len(scored_spots))
 		except:
 			#print('in except: scored_spots len', len(scored_spots))
-			scored_spots=scored_spots 
+			scored_spots=pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
 		
-		df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
-		df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
+		#df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
+		#df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 
 
 
