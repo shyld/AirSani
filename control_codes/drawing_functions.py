@@ -10,7 +10,6 @@ import cv2
 import numpy as np
 import time
 import datetime
-
 from control_codes.person_detection.person_detection import person_detection
 import os
 
@@ -107,7 +106,7 @@ def get_random_UV_loc(X):
             print('################. X',X)
             print('################. x,y',x,y)
             print('################. D',D)
-            if np.sum(D[0,0]<100)==0:
+            if D[0,0]>2*shared_variables.Coverage_size:
                 R.append(r)
         else:
             R.append(r)

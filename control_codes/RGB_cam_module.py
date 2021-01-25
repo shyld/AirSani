@@ -25,7 +25,7 @@ except:
 from sklearn.neighbors import NearestNeighbors
 
 from control_codes import shared_variables
-
+from control_codes import UV_assignment
 from control_codes.drawing_functions import *
 
 
@@ -190,6 +190,7 @@ class MyVideoCapture:
 
             # Add the detections to the shared_variables
             shared_variables.add_detections(moving_areas, priority=2)
+            #UV_assignment.check_human_exposure()
             
             #print('in RGB_cam, shared_variables.detected_coordinates', len(shared_variables.detected_coordinates))
             #print('len(shared_variables.detected_coordinates) ',len(shared_variables.detected_coordinates))

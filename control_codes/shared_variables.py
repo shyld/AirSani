@@ -11,7 +11,7 @@ def init():
 	global Cam_width, Cam_height, Coverage_size, min_score, max_score, UV_after_sec, freq_process, TEST
 	Cam_width = 640
 	Cam_height = 480
-	Coverage_size = 30
+	Coverage_size = 50
 	min_score = 1
 	max_score = 10
 	UV_after_sec = 1
