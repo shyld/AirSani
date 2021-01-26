@@ -117,6 +117,31 @@ def update_scores_from_file():
 		#df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
 		#df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 
+def update_scores_from_file_immediate():
+
+	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates,tf_detection,tf_scores
+	t = datetime.datetime.now()
+	t_s =  int(t.second)
+	#print('read_scores_from_file(), ', t_s, tf_scores)
+	if True:
+		#print('in the if *******************')
+		tf_score = t_s
+		try:
+			scored_spots = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
+			#scored_spots =  pd.concat([df, scored_spots])
+			#print('in try: scored_spots len', len(scored_spots))
+		except:
+			#print('in except: scored_spots len', len(scored_spots))
+			scored_spots=pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
+
+def write_scores_to_file_immediate():
+	global detected_coordinates, UV_wall, avoid_list, scored_spots, UV_coordinates,tf_detection,tf_scores
+
+	t = datetime.datetime.now()
+	t_s =  int(t.second)
+	if True:
+		tf_detection = t_s
+		scored_spots.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 
 
 def test_variables():

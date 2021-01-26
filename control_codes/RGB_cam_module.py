@@ -190,7 +190,7 @@ class MyVideoCapture:
 
             # Add the detections to the shared_variables
             shared_variables.add_detections(moving_areas, priority=2)
-            #UV_assignment.check_human_exposure()
+            UV_assignment.check_human_exposure()
             
             #print('in RGB_cam, shared_variables.detected_coordinates', len(shared_variables.detected_coordinates))
             #print('len(shared_variables.detected_coordinates) ',len(shared_variables.detected_coordinates))
@@ -217,6 +217,9 @@ class MyVideoCapture:
                     x1,x2 = max(min(box[0],box[2]),0), min(max(box[0],box[2]),w)
                     y1,y2 = max(min(box[1],box[3]),0), min(max(box[1],box[3]),h)
                     cv2.rectangle(frame2, (x1,y1),(x2,y2), (0, 255, 0), 4)
+
+                    # Check for exposure
+                    UV_assignment.check_human_exposure_2(x1,x2,y1,y2)
 
                     if box[5]<100 and x2-x1>0 and y2-y1>0 and x1<w and y1<h: # if the distance from the previous box is small and ...
                         #cv2.putText(frame2, 'looking for touch', (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,255,255), 2)

@@ -10,7 +10,7 @@ import time
 contour_lower = 900 
 contour_upper = 500000
 predefined_distance=1000
-t_no_person = 2 # seconds
+t_no_person = 4 # seconds
 still_threshold = 0.05
 t_still = 5 # sec
 shared_variables.TEST = True
