@@ -79,11 +79,11 @@ def check_human_exposure_2(x1,x2,y1,y2):
 
 	np_UV = df_UV[['i','j']].to_numpy()
 	print('np_UV: ', np_UV)
-	
+
 	for i in range(np_UV.shape[0]):
 		x_uv,y_uv = np_UV[i,0],np_UV[i,1]
 
-		if x1-50<x_uv and x_uv<x2+50 and y1-50<y_uv and y_uv<y2+50:
+		if x1-30<x_uv and x_uv<x2+30 and y1-30<y_uv and y_uv<y2+30:
 			print('TRUEEEEEEEE Exposure in SQUARE')
 
 			shared_variables.update_scores_from_file_immediate()

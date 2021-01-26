@@ -14,7 +14,7 @@ t_no_person = 4 # seconds
 still_threshold = 0.05
 t_still = 5 # sec
 shared_variables.TEST = True
-#t_still_frq = 10/5
+# t_still_frq = 10/5
 
 # This class returns the boxes of detected people. The output is a n by 10 matrix, where the first
 # 4 columns are the x1,y1,x2,y2 and the fifth column is the time since last movement and

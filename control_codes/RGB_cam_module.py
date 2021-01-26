@@ -137,7 +137,7 @@ class MyVideoCapture:
             print('running from file:')
             path = os.path.dirname(os.path.abspath(__file__))
             print('path: ', path)
-            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
+            self.cap = cv2.VideoCapture(path+'/media/02.mp4')
             frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
             ret, frame1 = self.cap.read()
@@ -209,6 +209,19 @@ class MyVideoCapture:
             #shared_variables.add_avoid_list(moving_people)
             #shared_variables.remove_old_avoid_list()
 
+            shared_variables.update_scores_from_file()
+
+            frame2 = draw_scores(frame2)
+                        #print('CHECK 4',len(shared_variables.scored_spots))
+            frame2 = draw_detections(frame2)
+            
+            ## Write to the file
+            shared_variables.write_detections_to_file()
+            print('CHECK 5',len(shared_variables.scored_spots))
+
+            print('CHECK 3',len(shared_variables.scored_spots))
+            frame2 = draw_UV(frame2)
+
             # Touch Detection
             #print('in RGB_cam: moving_people', moving_people.shape)
             if True:
@@ -244,17 +257,7 @@ class MyVideoCapture:
             
             #print('CHECK 2',len(shared_variables.scored_spots))
             # Update scores from file (once every sec)
-            shared_variables.update_scores_from_file()
 
-            frame2 = draw_scores(frame2)
-            print('CHECK 3',len(shared_variables.scored_spots))
-            frame2 = draw_UV(frame2)
-            #print('CHECK 4',len(shared_variables.scored_spots))
-            frame2 = draw_detections(frame2)
-            
-            ## Write to the file
-            shared_variables.write_detections_to_file()
-            print('CHECK 5',len(shared_variables.scored_spots))
 
             # remove old items
             #shared_variables.remove_old_scored_list()
