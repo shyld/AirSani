@@ -5,12 +5,20 @@ from sklearn.neighbors import NearestNeighbors
 from control_codes import shared_variables
 import cv2
 import time
-
+#try:
+if False:
+	from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
+	ON_Jetson = True
+else:
+#except:
+	print('no pose estimation for person detection')
+	ON_Jetson = False
+#from control_codes.drawing_functions import origin_corner_2_center
 # Parameters
 contour_lower = 900 
 contour_upper = 500000
 predefined_distance=1000
-t_no_person = 4 # seconds
+#t_no_person = 10 # seconds
 still_threshold = 0.05
 t_still = 5 # sec
 shared_variables.TEST = True
@@ -20,18 +28,40 @@ shared_variables.TEST = True
 # 4 columns are the x1,y1,x2,y2 and the fifth column is the time since last movement and
 # the last 5 columns are the distances to the previous locations at 5 last sec.
 
+
+def origin_center_2_corner(x1,x2,y1,y2):
+	xp1 = max(int(x1 + shared_variables.Cam_width/2),0)
+	xp2 = min(int(x2 + shared_variables.Cam_width/2),shared_variables.Cam_width)
+	yp1 = max(int(y1 + shared_variables.Cam_height/2),0)
+	yp2 = min(int(y2 + shared_variables.Cam_height/2),shared_variables.Cam_height)
+	return xp1,xp2,yp1,yp2
+
+def origin_corner_2_center(x1,x2,y1,y2):
+	xp1 = int(x1 - shared_variables.Cam_width/2)
+	xp2 = int(x2 - shared_variables.Cam_width/2)
+	yp1 = int(y1 - shared_variables.Cam_height/2)
+	yp2 = int(y2 - shared_variables.Cam_height/2)
+	return xp1,xp2,yp1,yp2
+
+
+
 class person_detection:
 
 	def __init__(self, person_scale=0.1):
 		self.person_scale = person_scale
 		self.persons_previous = np.array([])
 		self.current_time  = 0
+		#try:
+		if False:
+			self.my_pose_estimation = pose_estimation()
+		#except:
+			print('no pose estimation initialized')
 
 	def find_moving_people(self, L=[]): 
 		# L is the list of rectangles of moving contours
 		# person_scale is the average shoulder to waist length of the people
 		if len(L)==0:
-			print('find_moving_people: L:[]')
+			#print('find_moving_people: L:[]')
 			return np.array([])
 		# Find the contour rectangle centers
 		X_centers = [(x1+x2)/2 for (x1,y1,x2,y2) in L]
@@ -43,31 +73,32 @@ class person_detection:
 
 		# Apply DBSCAN clustering
 		try:
-			print('np.array(weights).shape ', np.array(weights).shape)
+			#print('np.array(weights).shape ', np.array(weights).shape)
 			db = DBSCAN(eps=0.7*self.person_scale, min_samples=1).fit(centers, y=None, sample_weight = np.array(weights))
 			clusters = db.labels_
 
 			# find centers of the clusters
 			cluster_centers = [[np.mean(centers[clusters==i,0]),np.mean(centers[clusters==i,1])] for i in range(np.max(clusters))]
-			print('cluster_centers: ', cluster_centers)
+			#print('cluster_centers: ', cluster_centers)
 			# find human boxes: x0,y0,x1,y1
 			C = cluster_centers
 			p = self.person_scale*1.2
+			# Box coordinates: x1,y1,x2,y2, time, previous distances
 			Boxes = [[int(C[i][0]-p), int(C[i][1]-p), int(C[i][0]+p),int(C[i][1]+p), int(time.time())%1000,int(predefined_distance),0,0,0,0,0,0,0,0] for i in range(len(C))] 
 		except:
-			print('find_moving_people: EXCEPT')
+			#print('find_moving_people: EXCEPT')
 			Boxes = []
 		#return centers, clusters
 		return np.array(Boxes)
 
 
-	def update_all_people(self, moving_persons_boxes=np.array([])):
+	def update_all_people(self, moving_persons_boxes, frame):
 
 
 		final_list = []
 		NEW = moving_persons_boxes
 		OLD = self.persons_previous
-		#print('OLD', OLD)
+		print('self.persons_previous', self.persons_previous)
 
 		# Special Cases
 		if OLD.shape[0]==0:
@@ -78,7 +109,7 @@ class person_detection:
 			# Apply nearest neghbor search on the upper left coordinate
 			nbrs = NearestNeighbors(n_neighbors=1).fit(NEW[:,:2])
 			distances, indices = nbrs.kneighbors(OLD[:,:2])
-			I_common_OLD = np.where(distances<1.2*self.person_scale)[0] # index of the moving items
+			I_common_OLD = np.where(distances<shared_variables.Coverage_size)[0] # index of the moving items
 			#print('person_detection: NEW.tolist()', NEW.tolist()[0])
 			
 			for i in range(NEW.shape[0]):
@@ -92,20 +123,65 @@ class person_detection:
 		
 		
 		t_now = int(time.time())%1000
+		
+		# Update time
+		#final_list = np.array(final_list)
+		print('final_list.shape: ',np.array(final_list).shape)
+		for i in range(len(final_list)):
+			final_list[i][4] = t_now
+		#[for final_list[:,4] = t_now]
+		#final_list = final_list.tolist()
+		
+
 		#print('person_detection: t_now',t_now)
 		#print('person_detection:,OLD[0,:]', OLD[0,:])
 		#self.current_time = t_now
 
-		I_no_person = np.where((t_now-OLD[:,4])%1000>t_no_person)[0] #if the box contains no person (the last update time is long time ago)
+
+		I_no_person = np.where((t_now-OLD[:,4])%1000>shared_variables.t_no_person)[0] #if the box contains no person (the last update time is long time ago)
+		
+		# check if there is actually a still person inside the box
+		for idx in I_no_person:
+			x1,y1,x2,y2 = OLD[idx][0],OLD[idx][1],OLD[idx][2],OLD[idx][3]
+			x1,y1,x2,y2 = origin_center_2_corner(x1,x2,y1,y2)
+			x1,y1,x2,y2 = min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2)
+			
+			# Run poes estimation
+			if ON_Jetson:
+				print(x1,x2,y1,y2)
+				print(frame.shape)
+				print(frame[y2:y1].shape)
+				print(frame[y1:y2,x1:x2].shape)
+				print('frame[y1:y2,x1:x2,:].shape: ', frame[y1:y2,x1:x2,:].shape)
+				(person_count , L_all, L_touch, frame) = self.my_pose_estimation.get_keypoints(frame[y1:y2,x1:x2,:])
+			else:
+				person_count = 0
+
+			#except:
+			#	person_count = 0
+			
+			# remove those containing person
+			if person_count>0:
+				I_no_person.remove(idx)
+				# reset its time
+				OLD[idx,4] = t_now
+
+
 		#print('I_common_OLD ',I_common_OLD)
-		#print('I_no_person ', I_no_person)
+		print('time from OLD',(t_now-OLD[:,4])%1000)
+		print('I_no_person ', I_no_person)
         
         # I_complement_OLD are those boxes from the previous frame, infered to contain still people
 		I_complement_OLD = [i for i in range(len(OLD)) if (not (i in I_common_OLD)) and (not (i in I_no_person))]
 
+		print('I_complement_OLD: ', I_complement_OLD)
+		
 		# Merge the OLD and NEW Boxes to the final_list
-		if len(I_complement_OLD)>0:
-			final_list.append(OLD[I_complement_OLD,:].tolist()[0])
+		T = OLD[I_complement_OLD,:].tolist()
+		for i in range(len(T)):
+			final_list.append(T[i])
+		#if len(I_complement_OLD)>0:
+			
 		
 		final_list = np.array(final_list)
 
@@ -123,7 +199,7 @@ class person_detection:
 
 		final_list[:,-1] = np.reshape(distances,(-1,))
 			# update time
-		final_list[:,4] = t_now
+		#final_list[:,4] = t_now
 		
 		# Update previous persons list
 		self.persons_previous = final_list
@@ -154,6 +230,17 @@ class person_detection:
 		shadowremov = cv2.merge(result_norm_planes)
 		return shadowremov
 
+	def change_coordinate(self,X):
+		try:
+			X[:,0] = np.floor(X[:,0]-shared_variables.Cam_width/2)
+			X[:,1] = np.floor(X[:,1]-shared_variables.Cam_height/2)
+			X[:,2] = np.floor(X[:,2]-shared_variables.Cam_width/2)
+			X[:,3] = np.floor(X[:,3]-shared_variables.Cam_height/2)
+		except:
+			print('no input in change coordinate')
+		return X
+
+
 	# the main function
 	def get_all_people(self, frame1, frame2):
 		#print('In person_detection, get_all ... :frame1.shape', frame1.shape)
@@ -178,18 +265,49 @@ class person_detection:
 			(x, y, w, h) = cv2.boundingRect(contour)
 			if cv2.contourArea(contour) < contour_lower or cv2.contourArea(contour) > contour_upper :
 				continue
-			L.append((x, y, x+w, y+h))
+
+			x1,x2,y1,y2 = origin_corner_2_center(x,x+w,y,y+h)
+			L.append((x1, y1, x2, y2))
 		#print('in person detection: L', L)
+		#if len(L)>0:
 		# Find moving people boxes based on motion boxes
-		M = self.find_moving_people(L=L)
+		try:
+		#if True:
+			M = self.find_moving_people(L=L)
+			print('M: try')
+		except:
+		#if False:
+			M = np.array([])
+			print('M: except')
 
-		#print('in person detection: M', M)
 		# Update people boxes
-		A = self.update_all_people(moving_persons_boxes=M)
+		try:
+		#if True:
+			A = self.update_all_people(moving_persons_boxes=M, frame = frame1)
+			print('A: try')
+		except:
+		#if False:
+			A = np.array([])
+			print('A: except')
 
-		S = self.find_still_people(all_people=A)
+		#else:
+		#	M = np.array([])
+		#	A = np.array([])
+		print('find_moving_people: ', M)
+		print('update_all_people: ', A)
 
-		return  A, np.array(L), S, M # moving people, moving areas, centers of the still people [all in numpy array]
+		#S = self.find_still_people(all_people=A)
+		S = np.array([])
+
+		# Change the origin to center:
+		L = np.array(L)
+		#L = self.change_coordinate(L)
+		#A = self.change_coordinate(A)
+		#S = self.change_coordinate(S)
+		#M = self.change_coordinate(M)
+
+		# return numpy arrays
+		return  A, L, S, M # moving people, moving areas, centers of the still people [all in numpy array]
 
 
 

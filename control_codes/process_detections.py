@@ -86,7 +86,7 @@ while F_running:
 	b0, F_running = check_stop(b0,b1)
 
 	#print('process_detections running: inside the while loop ')
-	time.sleep(4.0)
+	time.sleep(3.0)
 
 	
 	# Check_stop every x sec
@@ -130,10 +130,10 @@ while F_running:
 			#print(i, len(df) )
 			#print('len(df) ' , len(df_remaining))
 
-			x1 = math.floor((df.Left.iloc[i] - shared_variables.Cam_width/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
-			x2 = math.floor((df.Right.iloc[i] - shared_variables.Cam_width/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
-			y1 = math.floor((df.Top.iloc[i] - shared_variables.Cam_height/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
-			y2 = math.floor((df.Bottom.iloc[i] - shared_variables.Cam_height/2)/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			x1 = math.floor((df.Left.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			x2 = math.floor((df.Right.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			y1 = math.floor((df.Top.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			y2 = math.floor((df.Bottom.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
 
 			#print('-------------------- df.Left.iloc[i], x1: ', df.Left.iloc[i], x1, shared_variables.Cam_width, shared_variables.Coverage_size)
 

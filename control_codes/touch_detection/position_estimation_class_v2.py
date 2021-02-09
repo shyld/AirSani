@@ -225,13 +225,13 @@ class pose_estimation:
 
 		#if final_image != None:
 		final_image_resized=cv2.resize(final_image,(width, height))
-
-		return Loc_all, Loc_event, final_image_resized#cv2.cvtColor(final_image_resized, cv2.COLOR_BGR2RGB) 
+		person_count = c
+		return person_count, Loc_all, Loc_event, final_image_resized#cv2.cvtColor(final_image_resized, cv2.COLOR_BGR2RGB) 
 
 	def detect_touch(self,frame):
 
-		(L_all, L_touch, frame) = self.get_keypoints(frame)
+		(person_count , L_all, L_touch, frame) = self.get_keypoints(frame)
 
-		return frame, np.array(L_touch)
+		return frame, np.array(L_touch), person_count
 
 

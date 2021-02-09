@@ -31,7 +31,7 @@ a0,a1, b0, b1, c0,c1 = 0,0,0,0,0,0
 def check_stop(b0,b1):
 	F_running = True
 	if b1 != b0:
-		print('Check_stop')
+		#print('Check_stop')
 		b0 = b1
 		df0 = pd.read_csv(path+'/control_codes/shared_csv_files/onoff.csv')
 		F_running = (df0[df0['arguments']=='F1']['value'].iloc[0]=='TRUE') & (df0[df0['arguments']=='F0']['value'].iloc[0]=='TRUE')
@@ -54,7 +54,7 @@ while F_running:
 		out.write(cv2.resize(frame, (1280,720)))
 		cv2.imshow("feed", cv2.resize(frame, (600,400)))
 
-		if cv2.waitKey(100) == 27:
+		if cv2.waitKey(40) == 27:
 			break
 		#time.sleep(1)
 	#except:

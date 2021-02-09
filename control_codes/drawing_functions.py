@@ -12,13 +12,29 @@ import time
 import datetime
 from control_codes.person_detection.person_detection import person_detection
 import os
-
-
+from control_codes.UV_assignment import check_human_exposure,check_human_exposure_2,check_human_exposure_3,check_human_exposure_4
+import datetime
 from sklearn.neighbors import NearestNeighbors
 
 from control_codes import shared_variables
 
 PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+def origin_center_2_corner(x1,x2,y1,y2):
+    xp1 = max(int(x1 + shared_variables.Cam_width/2),0)
+    xp2 = min(int(x2 + shared_variables.Cam_width/2),shared_variables.Cam_width)
+    yp1 = max(int(y1 + shared_variables.Cam_height/2),0)
+    yp2 = min(int(y2 + shared_variables.Cam_height/2),shared_variables.Cam_height)
+    return xp1,xp2,yp1,yp2
+
+def origin_corner_2_center(x1,x2,y1,y2):
+    xp1 = int(x1 - shared_variables.Cam_width/2)
+    xp2 = int(x2 - shared_variables.Cam_width/2)
+    yp1 = int(y1 - shared_variables.Cam_height/2)
+    yp2 = int(y2 - shared_variables.Cam_height/2)
+    return xp1,xp2,yp1,yp2
+
 
 # Simple draw label on an image; in our case, the video frame
 def draw_label(cv_image, label_text, label_position):
@@ -30,6 +46,9 @@ def draw_label(cv_image, label_text, label_position):
 
 def draw_detections(frame):
     C = shared_variables.detected_coordinates
+
+    t = datetime.datetime.now()
+    C = C[pd.to_datetime(C['time'])>t-datetime.timedelta(seconds=1)]
     #print('draw_detections ', len(C))
     for i in range(len(C)):
         #print("C.loc[i,'Left']: ",C.loc[i,'Left'])
@@ -37,6 +56,11 @@ def draw_detections(frame):
         #print("C.loc[i,'Left']: ",C['Left'].iloc[i])
 
         x1,x2,y1,y2 = int(C['Left'].iloc[i]), int(C['Right'].iloc[i]), int(C['Top'].iloc[i]), int(C['Bottom'].iloc[i])
+        x1= int( x1+ shared_variables.Cam_width/2)
+        x2= int( x2+ shared_variables.Cam_width/2)
+        y1= int( y1+ shared_variables.Cam_height/2)
+        y2= int( y2+ shared_variables.Cam_height/2)
+
         alpha = 0.7
         frame = overlay_square(frame, x1,y1,x2,y2,(255,0,0),alpha)
 
@@ -54,7 +78,7 @@ def draw_scores(frame):
     #shared_variables.read_scores_from_file()
     C = shared_variables.scored_spots
 
-    print('********************** draw_scores ', len(C))
+    #print('********************** draw_scores ', len(C))
     for i in range(len(C)):
         #print("C.loc[i,'Left']: ",C.loc[i,'Left'])
         #print("C.loc[i,'Left']: ",C.iloc[i,'Left'])
@@ -83,40 +107,75 @@ def draw_scores(frame):
 
     return frame
 
-def get_random_UV_loc(X):
+def get_random_UV_loc(): 
+    # X is the numpy array of detected moving areas to be avoided
+    
     R = []
     #if X.shape[0]<1:
     #    print('X.shape[0]<4')
     #    return R
 
     len_df = len(shared_variables.scored_spots)
-    print('*************** IN get_random_UV_loc(X):', len_df)
+    #print('*************** IN get_random_UV_loc(X):', len_df)
 
     
     u=0
     while len(R)<4 and u<20:
         u+=1
         r = np.random.randint(low=0,high=len_df,size=1)[0]
+        x,y = shared_variables.scored_spots.loc[r,'i'],shared_variables.scored_spots.loc[r,'j']
         
-        if X.shape[0]>1:
-            neigh = NearestNeighbors(n_neighbors=1)
-            neigh.fit(X)
-            x,y = shared_variables.scored_spots.loc[r,'i'],shared_variables.scored_spots.loc[r,'j']
-            D,I = neigh.kneighbors([[x,y]], n_neighbors=2, return_distance=True)
-            print('################. X',X)
-            print('################. x,y',x,y)
-            print('################. D',D)
-            if D[0,0]>2*shared_variables.Coverage_size:
-                R.append(r)
-        else:
-            R.append(r)
+        #print('check_human_exposure_3(x,y): ', check_human_exposure_3(x,y))
+        #print('check_human_exposure_4(x,y): ', check_human_exposure_4(x,y))
+
+        if check_human_exposure_3(x,y) or check_human_exposure_4(x,y):
+            continue
+        R.append(r)
+
+        #x = x + shared_variables.Cam_width/2
+        #y = y + shared_variables.Cam_height/2
+        # Check possible exposure with moving areas and moving people
+        #exposure = False
+
+        #print("\n\n\n X \n\n\n", X.shape[0])
+        #if X.shape[0]>0:
+
+        #    neigh = NearestNeighbors(n_neighbors=1)
+        #    neigh.fit(X)
+        #    D,I = neigh.kneighbors([[x,y]], n_neighbors=1, return_distance=True)
+        #    print('################. X',X)
+        #    print('################. x,y',x,y)
+        #    print('################. D',D)
+        #    if D[0,0]<2*shared_variables.Coverage_size:
+        #        exposure = True
+
+        #print('BOX      XXXXXXX', shared_variables.moving_people.shape[0])
+        #for box in shared_variables.moving_people:
+        #    x1,x2 = max(min(box[0],box[2]),0), max(box[0],box[2])
+        #    y1,y2 = max(min(box[1],box[3]),0), max(box[1],box[3])
+
+            #x1 = x1 - shared_variables.Cam_width/2
+            #x2 = x2 - shared_variables.Cam_width/2
+            #y1 = y1 - shared_variables.Cam_height/2
+            #y2 = y2 - shared_variables.Cam_height/2
+
+        #    m = shared_variables.UV_margin
+        #    if x1-m<x and x<x2+m and y1-m<y and y<y2+m:
+        #        print('XXXXXXX      XXXXXXX')
+        #        exposure = True
+
+
+        #if exposure == False:
+            
+        #else:
+        #    R.append(r)
 
     return R
 
 # Clear preivous UV spots from scored_spots, 
 #       and change the scores of the new random set of UV locations as -1
 def apply_UV():
-    print('IN apply_UV')
+    #print('IN apply_UV')
     R=[]
     if len(shared_variables.scored_spots)<4:
         return 0
@@ -124,13 +183,13 @@ def apply_UV():
     t = datetime.datetime.now()
     t_s =  int(t.second/4)
     if t_s!= shared_variables.tf_UV:
-        print('IN apply_UV, TIME IN , t_s', t_s, shared_variables.tf_UV)
+        #print('IN apply_UV, TIME IN , t_s', t_s, shared_variables.tf_UV)
         shared_variables.tf_UV = t_s
 
         try:
             shared_variables.scored_spots = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
         except:
-            print('ERROR READING SCORES FROM FILE')
+            #print('ERROR READING SCORES FROM FILE')
             return 0
             #scored_spots=pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
         
@@ -147,23 +206,25 @@ def apply_UV():
         # load the dataset
         # randomly select 4
         if len_df ==0:
-            print('len_df ZERO')
+            #print('len_df ZERO')
             return 0
 
         X1 = np.reshape(shared_variables.detected_coordinates['Left'].to_numpy(),(-1,1))+np.reshape(shared_variables.detected_coordinates['Right'].to_numpy(),(-1,1))
         X2 = np.reshape(shared_variables.detected_coordinates['Top'].to_numpy(),(-1,1))+np.reshape(shared_variables.detected_coordinates['Bottom'].to_numpy(),(-1,1))
-        X1 = (X1/2 - shared_variables.Cam_width/2).astype(int)
-        X2 = (X2/2 - shared_variables.Cam_height/2).astype(int)
+        X1 = X1.astype(int)#(X1/2 - shared_variables.Cam_width/2).astype(int)
+        X2 = X2.astype(int)#(X2/2 - shared_variables.Cam_height/2).astype(int)
 
         #print('X1.shape', X1.shape)
+
         X = np.concatenate((X1,X2),axis=1)
+        #print('Simple    X shapes       ', X1.shape, X2.shape, X.shape, len(shared_variables.detected_coordinates))
         
         #print('X.shape', X.shape)
         # Get random UV spots
-        R = get_random_UV_loc(X)
-        print('R: ', R)
+        R = get_random_UV_loc()
+        #print('R: ', R)
 
-        print(R, len_df)
+        #print(R, len_df)
         #shared_variables.UV_spots = R
 
     # change the scores to -1
@@ -178,6 +239,8 @@ def apply_UV():
     #return df_score
 
 def draw_UV( frame):
+
+
 
     #try:
     #    shared_variables.update_scores_from_file()
@@ -209,7 +272,7 @@ def draw_UV( frame):
 
     #print('df_score: ', df_score)
     if len(df_UV)>0:
-        print('df_UV: ', df_UV)
+        #print('df_UV: ', df_UV)
         #print('111111111     df_UV len', len(df_UV))
         # remove the indexes
         
@@ -243,7 +306,7 @@ def draw_wall(self,frame):
     if idx.shape[0]>0:
         p1 = X[idx[0],:]
         p2 = X[I[idx[0],1],:]
-        print('p1,p2', p1,p2)
+        #print('p1,p2', p1,p2)
         alpha = 0.7
         #frame = overlay_square(frame, x1,y1,x2,y2,(0,255,0),alpha)
         s1,s2 = find_wall_coordinate(p1,p2)

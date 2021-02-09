@@ -137,7 +137,7 @@ class MyVideoCapture:
             print('running from file:')
             path = os.path.dirname(os.path.abspath(__file__))
             print('path: ', path)
-            self.cap = cv2.VideoCapture(path+'/media/02.mp4')
+            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
             frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
             ret, frame1 = self.cap.read()
@@ -149,6 +149,9 @@ class MyVideoCapture:
             print('Loading classes...')
             self.my_person_detection = person_detection(person_scale=person_scale)
             print('My_person_detection loaded')
+            
+            self.my_pose_estimation = pose_estimation()
+            print('My pose loaded')
 
 
     def get_frame(self):
@@ -182,6 +185,7 @@ class MyVideoCapture:
         ret, self.frame1 = self.get_frame()
         time.sleep(0.1)
         ret, frame2 = self.get_frame()
+        frame2_org = frame2.copy()
         #print('in get_processed_frame: frame1.shape, frame2.shape: ', frame1.shape, frame2.shape)
         #print('in get prosessed frame, ', ret)
         if ret:
@@ -190,6 +194,7 @@ class MyVideoCapture:
 
             # Add the detections to the shared_variables
             shared_variables.add_detections(moving_areas, priority=2)
+            shared_variables.add_people(moving_people)
             UV_assignment.check_human_exposure()
             
             #print('in RGB_cam, shared_variables.detected_coordinates', len(shared_variables.detected_coordinates))
@@ -212,46 +217,64 @@ class MyVideoCapture:
             shared_variables.update_scores_from_file()
 
             frame2 = draw_scores(frame2)
-                        #print('CHECK 4',len(shared_variables.scored_spots))
+                        #print('CHECK 4'9,len(shared_variables.scored_spots))
             frame2 = draw_detections(frame2)
             
             ## Write to the file
             shared_variables.write_detections_to_file()
-            print('CHECK 5',len(shared_variables.scored_spots))
+            #print('CHECK 5',len(shared_variables.scored_spots))
 
-            print('CHECK 3',len(shared_variables.scored_spots))
+            #print('CHECK 3',len(shared_variables.scored_spots))
             frame2 = draw_UV(frame2)
 
             # Touch Detection
             #print('in RGB_cam: moving_people', moving_people.shape)
             if True:
+                u = -1
                 for box in moving_people:
+                    u += 1
+
                     h,w = frame2.shape[0], frame2.shape[1] # rows and columns
-                    x1,x2 = max(min(box[0],box[2]),0), min(max(box[0],box[2]),w)
-                    y1,y2 = max(min(box[1],box[3]),0), min(max(box[1],box[3]),h)
-                    cv2.rectangle(frame2, (x1,y1),(x2,y2), (0, 255, 0), 4)
+                    x1,x2 =min(box[0],box[2]), max(box[0],box[2])
+                    y1,y2 = min(box[1],box[3]), max(box[1],box[3])
+
+                    xp1,xp2,yp1,yp2 = origin_center_2_corner(x1,x2,y1,y2)
+
+                    cv2.rectangle(frame2, (xp1,yp1),(xp2,yp2), (0, 255, 0), 4)
 
                     # Check for exposure
                     UV_assignment.check_human_exposure_2(x1,x2,y1,y2)
 
-                    if box[5]<100 and x2-x1>0 and y2-y1>0 and x1<w and y1<h: # if the distance from the previous box is small and ...
+
+
+                    #if box[5]<50 and x2-x1>0 and y2-y1>0 and x1<w and y1<h: # if the distance from the previous box is small and ...
+                    if (int(time.time()) - moving_people[u,4])%1000 >shared_variables.t_no_person:
                         #cv2.putText(frame2, 'looking for touch', (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 3, (255,255,255), 2)
                         #print('looking for touch')
                         #print(x1,x2,y1,y2, frame2.shape)
 
-                        frame_region = frame2[y1:y2,x1:x2,:]
+                        frame_region = frame2_org[y1:y2,x1:x2,:]
                         #print('**********',frame_region.shape)
                         
-                        #if self.sensor_id>=0:
-                        #   frame_region, touch_spots = self.my_pose_estimation.detect_touch(frame_region)
-                        
+                        if frame_region.shape[0]>0 and frame_region.shape[1]>0: #self.sensor_id>=0:
+                            print('************* frame_region.shape: ', frame_region.shape)
+                            person_count = 0
+                            frame_region, touch_spots, person_count = self.my_pose_estimation.detect_touch(frame_region)
+                            # If detect a person then reset the time of the box (the time last person detected)
+                            
+                            print('**************  person_count: ', person_count)
+                            if person_count>0:
+                                # update time
+                                moving_people[u,4] = int(time.time())%1000
+
                         # Update shared variables
                         #   if touch_spots.shape[0]>0:
                         #       shared_variables.add_detections(touch_spots, priority=1)
                         #print('**',frame_region.shape)
                         frame2[y1:y2,x1:x2,:] = frame_region
+                # Update moving_people
+                shared_variables.moving_people = moving_people
 
-                
             # Draw the infected areas
             #print('CHECK 1',len(shared_variables.scored_spots))
             
