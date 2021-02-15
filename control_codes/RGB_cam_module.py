@@ -18,7 +18,7 @@ from control_codes.person_detection.person_detection import person_detection
 
 try:
     from control_codes.csi_camera import CSI_Camera
-    from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
+    #from control_codes.touch_detection.position_estimation_class_v2 import pose_estimation
 except:
     print('test_mode on macOS')
 
@@ -124,8 +124,8 @@ class MyVideoCapture:
                 print('Loading classes...')
                 self.my_person_detection = person_detection(person_scale=person_scale)
                 print('My_person_detection loaded')
-                self.my_pose_estimation = pose_estimation()
-                print('My pose loaded')
+                #self.my_pose_estimation = pose_estimation()
+                #print('My pose loaded')
 
             except:
                 print('running from the sample video')
@@ -150,8 +150,8 @@ class MyVideoCapture:
             self.my_person_detection = person_detection(person_scale=person_scale)
             print('My_person_detection loaded')
             
-            self.my_pose_estimation = pose_estimation()
-            print('My pose loaded')
+            #self.my_pose_estimation = pose_estimation()
+            #print('My pose loaded')
 
 
     def get_frame(self):
@@ -259,7 +259,7 @@ class MyVideoCapture:
                         if frame_region.shape[0]>0 and frame_region.shape[1]>0: #self.sensor_id>=0:
                             print('************* frame_region.shape: ', frame_region.shape)
                             person_count = 0
-                            frame_region, touch_spots, person_count = self.my_pose_estimation.detect_touch(frame_region)
+                            #frame_region, touch_spots, person_count = self.my_pose_estimation.detect_touch(frame_region)
                             # If detect a person then reset the time of the box (the time last person detected)
                             
                             print('**************  person_count: ', person_count)
