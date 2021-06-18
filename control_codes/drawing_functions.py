@@ -26,8 +26,8 @@ UV_sec = shared_variables.UV_sec
 def origin_center_2_corner(x1,x2,y1,y2):
     xp1 = max(int(x1 + shared_variables.Cam_width/2),0)
     xp2 = min(int(x2 + shared_variables.Cam_width/2),shared_variables.Cam_width)
-    yp1 = max(int( shared_variables.Cam_height/2 - y1),0)
-    yp2 = min(int( shared_variables.Cam_height/2 - y2),shared_variables.Cam_height)
+    yp1 = max(int( shared_variables.Cam_height/2 + y1),0)
+    yp2 = min(int( shared_variables.Cam_height/2 + y2),shared_variables.Cam_height)
     return xp1,xp2,yp1,yp2
 
 def origin_corner_2_center(x1,x2,y1,y2):
@@ -60,12 +60,12 @@ def draw_detections(frame):
         x1,x2,y1,y2 = int(C['Left'].iloc[i]), int(C['Right'].iloc[i]), int(C['Top'].iloc[i]), int(C['Bottom'].iloc[i])
         x1= int( x1+ shared_variables.Cam_width/2)
         x2= int( x2+ shared_variables.Cam_width/2)
-        y1= int(shared_variables.Cam_height/2 - y1)
-        y2= int(shared_variables.Cam_height/2 - y2)
+        y1= int(shared_variables.Cam_height/2 + y1)#int(shared_variables.Cam_height/2 - y1)
+        y2= int(shared_variables.Cam_height/2 + y2)#int(shared_variables.Cam_height/2 - y2)
 
         alpha = 0.7
         frame = overlay_square(frame, x1,y1,x2,y2,(255,0,0),alpha)
-        print('777 777 777 draw_detections:', x1,y1,x2,y2)
+        #print('777 777 777 draw_detections:', x1,y1,x2,y2)
     return frame
 
 
@@ -88,8 +88,8 @@ def draw_scores(frame):
 
         t,pr,x,y,sc = C['time'].iloc[i], int(C['priority'].iloc[i]), int(C['i'].iloc[i]), int(C['j'].iloc[i]), int(C['score'].iloc[i])
         #print('detection: ', x1,x2,y1,y2) 
-        y1=int(shared_variables.Cam_height/2)-y
-        y2=int(shared_variables.Cam_height/2-y + shared_variables.Coverage_size)
+        y1=int(shared_variables.Cam_height/2)+y
+        y2=int(shared_variables.Cam_height/2+y + shared_variables.Coverage_size)
         #y1=y+ int(shared_variables.Cam_height/2)
         #y2=y+ int(shared_variables.Cam_height/2 + shared_variables.Coverage_size)
         x1=x + int(shared_variables.Cam_width/2)
@@ -179,7 +179,25 @@ def get_random_UV_loc():
 # Check LED areas
 def LED_in_area(LED=0,x=0,y=0):
     if LED==0:
-        if -30<x and x<100 and -30<y and y<100:
+        if -150<x and x<150 and -150<y and y<150:
+            return True
+        else:
+            return False
+
+    if LED==1:
+        if -150<x and x<150 and -150<y and y<0:
+            return True
+        else:
+            return False
+
+    if LED==2:
+        if -150<x and x<150 and -150<y and y<0:
+            return True
+        else:
+            return False
+
+    if LED==3:
+        if -150<x and x<150 and -50<y and y<150:
             return True
         else:
             return False
@@ -202,9 +220,9 @@ def get_random_UV_loc_v2():
         r = np.random.randint(low=0,high=len_df,size=1)[0]
         x,y = shared_variables.scored_spots.loc[r,'i'],shared_variables.scored_spots.loc[r,'j']
         
-        print('check_human_exposure_3(x,y): ', check_human_exposure_3(x,y))
-        print('check_human_exposure_4(x,y): ', check_human_exposure_4(x,y))
-        print('drawing functions, x, y', x,y)
+        #print('check_human_exposure_3(x,y): ', check_human_exposure_3(x,y))
+        #print('check_human_exposure_4(x,y): ', check_human_exposure_4(x,y))
+        #print('drawing functions, x, y', x,y)
         if check_human_exposure_3(x,y) or check_human_exposure_4(x,y) or (LED_in_area(LED=0,x=x,y=y)==False):
             continue
         R.append(r)
@@ -223,10 +241,16 @@ def apply_UV():
         return 0
 
     t = datetime.datetime.now()
-    t_s =  int(t.second/UV_sec)
+    t_s =  int(t.second/shared_variables.Delay_BTW_lights)%shared_variables.num_UV
     if t_s!= shared_variables.tf_UV:
         #print('IN apply_UV, TIME IN , t_s', t_s, shared_variables.tf_UV)
         shared_variables.tf_UV = t_s
+        
+        # check if it is time to assign a new spot the the light?
+        if datetime.datetime.now() - datetime.timedelta(seconds=shared_variables.UV_sec) < shared_variables.UV_time_log[t_s]:
+            return 0
+        
+        shared_variables.UV_time_log[t_s] = datetime.datetime.now()
 
         try:
             shared_variables.scored_spots = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
@@ -239,8 +263,12 @@ def apply_UV():
         #df_empty.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
 
         # clear previous spots
-        #df_filter = shared_variables.scored_spots[shared_variables.scored_spots['score']==-1]
-        shared_variables.scored_spots = shared_variables.scored_spots[shared_variables.scored_spots['score']>0].reset_index(drop=True)
+        #print(' t_s',  t_s)
+        #print(shared_variables.scored_spots['priority'] != t_s)
+        #print(shared_variables.scored_spots['score']>0)
+        #print('*******')
+        idx_filtered = (shared_variables.scored_spots['score']>0) | (shared_variables.scored_spots['priority'] != t_s)
+        shared_variables.scored_spots = shared_variables.scored_spots[idx_filtered].reset_index(drop=True)
 
     ### Assign new spots
         len_df = len(shared_variables.scored_spots)
@@ -264,7 +292,7 @@ def apply_UV():
         #print('X.shape', X.shape)
         # Get random UV spots
         R = get_random_UV_loc_v2()
-        print('$$$$$$$ R: ', R)
+        #print('$$$$$$$ R: ', R)
 
         # Add NEW RANDOM SCORED SPOT
         #print('add_random_spot_to_file()')
@@ -276,7 +304,8 @@ def apply_UV():
     # change the scores to -1
         for i in range(len(R)):
             shared_variables.scored_spots.loc[R[i],'score']=-1
-        print('shared_variables.scored_spots', shared_variables.scored_spots)
+            shared_variables.scored_spots.loc[R[i],'priority']=t_s
+        #print('shared_variables.scored_spots', shared_variables.scored_spots)
             # Apply UV
             #x,y = shared_variables.scored_spots.loc[R[i],'i'],shared_variables.scored_spots.loc[R[i],'j']
             
@@ -350,12 +379,12 @@ def draw_UV(frame):
         for i in range(len(df_UV)):
 
             ############ TO MODIFY LATER ###############
-            if light_status[0]=='on' :
+            if True:#light_status[0]=='on' :
 
                 t,pr,x,y,sc = df_filter['time'].iloc[i], int(df_filter['priority'].iloc[i]), int(df_filter['i'].iloc[i]), int(df_filter['j'].iloc[i]), int(df_filter['score'].iloc[i])
                 
-                y1= int(shared_variables.Cam_height/2) - y
-                y2= int(shared_variables.Cam_height/2 - y + shared_variables.Coverage_size)
+                y1= int(shared_variables.Cam_height/2) + y
+                y2= int(shared_variables.Cam_height/2 + y + shared_variables.Coverage_size)
 
                 #y1=y+ int(shared_variables.Cam_height/2)
                 #y2=y+ int(shared_variables.Cam_height/2 + shared_variables.Coverage_size)

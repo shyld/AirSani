@@ -139,7 +139,7 @@ class MyVideoCapture:
             print('running from file:')
             path = os.path.dirname(os.path.abspath(__file__))
             print('path: ', path)
-            self.cap = cv2.VideoCapture(path+'/media/01.mp4')
+            self.cap = cv2.VideoCapture(path+'/media/04.avi')
             frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
             ret, frame1 = self.cap.read()
@@ -177,7 +177,7 @@ class MyVideoCapture:
             img = cv2.resize(img, (640,360), interpolation=cv2.INTER_AREA)
 
             # Creating a translation matrix
-            translation_matrix = np.float32([ [1,0,-8], [0,1,8] ])
+            translation_matrix = np.float32([ [1,0,-16], [0,1,0] ])
 
             # Image translation
             img = cv2.warpAffine(img, translation_matrix, (640,360))
@@ -186,15 +186,19 @@ class MyVideoCapture:
             if ROTATE_CAM:
                 img = cv2.rotate(img, cv2.ROTATE_180)
 
+        #img[:,:,(0,1)] = 0
 
         if self.sensor_id==-1:
             ret, img=self.cap.read()
-            
+            #img[:,:,(0,1)] = 0
+
             if ret==False:
                print('no video')
                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                ret, img=self.cap.read()
-                
+            
+            #img[:,:,2] = img[:,:,0]
+            #img[:,:,(0,1)]=0
             img = cv2.resize(img, (640,360))
 
 
@@ -228,15 +232,15 @@ class MyVideoCapture:
         #print('in get prosessed frame, ', ret)
         if ret:
             
-            try:
+            if True:
                 # Detect events
                 moving_people, moving_areas, still_centers, M = self.my_person_detection.get_all_people(self.frame1,frame2)
-            except:
+            if False:
                 moving_people = np.array([])
                 moving_areas = np.array([])
                 still_centers = np.array([])
             # Add the detections to the shared_variables
-            #print('moving_people, moving_areas, still_centers, M', moving_people, moving_areas, still_centers, M)
+            print('moving_people, moving_areas, still_centers, M', moving_people, moving_areas, still_centers, M)
             shared_variables.add_detections(moving_areas, priority=2)
             shared_variables.add_people(moving_people)
             UV_assignment.check_human_exposure()
@@ -287,7 +291,9 @@ class MyVideoCapture:
 
                     xp1,xp2,yp1,yp2 = origin_center_2_corner(x1,x2,y1,y2)
 
-                    cv2.rectangle(frame2, (xp1,yp1),(xp2,yp2), (0, 255, 0), 4)
+                    print('xp1,xp2,yp1,yp2', xp1,xp2,yp1,yp2)
+
+                    cv2.rectangle(frame2, (xp1,yp1),(xp2,yp2), (0, 255, 0), 12)
 
                     # Check for exposure
                     UV_assignment.check_human_exposure_2(x1,x2,y1,y2)

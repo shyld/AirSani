@@ -47,7 +47,7 @@ def check_human_exposure():
 	neigh.fit(D)
 	    
 	D,I = neigh.kneighbors(np_UV, n_neighbors=1, return_distance=True)
-	idx = np.where(D[:,0]<2*shared_variables.Coverage_size)[0]
+	idx = np.where(D[:,0]<1*shared_variables.Coverage_size)[0]
 	#print('check_human_exposure(): len(idx)', idx.shape)
 	#for i in range(idx):
 	if idx.shape[0]==0:
@@ -138,7 +138,7 @@ def check_human_exposure_3(x,y):
 	D,I = neigh.kneighbors([[x,y]], n_neighbors=1, return_distance=True)
 	#idx = np.where(D[0,0]<2*shared_variables.Coverage_size)[0]
 
-	if D[0,0]<2*shared_variables.Coverage_size: 
+	if D[0,0]<1*shared_variables.Coverage_size: 
 		return True
 	else: 
 		return False

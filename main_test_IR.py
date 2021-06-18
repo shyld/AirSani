@@ -3,6 +3,7 @@ import datetime
 from control_codes.IR_cam_module import MyVideoCapture
 import pandas as pd
 import time
+import pickle
 
 path = os.path.dirname(os.path.abspath(__file__))
 #print('path: ', path)
@@ -54,3 +55,7 @@ if True:
 #writer.release()
 vid.cap.release()
 print('video saved')
+print(vid.ALL_CENTER_list)
+
+with open(path+"/control_codes/ALL_CENTERS.txt", "wb") as fp:   #Pickling
+    pickle.dump(vid.ALL_CENTER_list, fp)

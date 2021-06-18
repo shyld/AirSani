@@ -12,7 +12,7 @@ import numpy as np
 import time
 import datetime
 from control_codes.find_light import find_IR
-import control_codes.shared_variables
+import control_codes.shared_variables as shared_variables
 import os
 try:
     from control_codes.csi_camera import CSI_Camera
@@ -21,6 +21,8 @@ except:
     print('test_mode on macOS')
 
 import pandas as pd
+
+#import shared_variables
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,22 +39,32 @@ show_fps = True
 #    return img
 
 # preprocessing
-def pre_process(img):
+# preprocessing
+# preprocessing
+# preprocessing
+def pre_process(img,x,y):
     #img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     #img = cv2.resize(img, (width,height))
-    blurred = cv2.GaussianBlur(img, (21, 21), 0)
+    height,width = img.shape
+    # Crop a circle out of the image
+    mask = np.zeros((height,width), np.uint8)
+    circle_img = cv2.circle(mask,(int(x+width/2),int(height/2-y)),150,(255,255,255),thickness=-1)
+    masked_img = cv2.bitwise_and(img, img, mask=circle_img)
+    #cv2.imshow('Masked Image',masked_img) 
+    blurred = cv2.GaussianBlur(masked_img, (21, 21), 0)
     hist = cv2.calcHist([blurred], [0], None, [256], [0, 256]).flatten()
-    target_count = 400
+    target_count = 300
     summed = 0
-    for i in range(255, 0, -1):
-        summed += int(hist[i])
+    for i in range(255, 0, -10):
+        summed += int(hist[i])*10
         if target_count <= summed:
             hi_thresh = i
             break
     else:
         hi_thresh = 0
-
-    img = cv2.threshold(blurred, hi_thresh, 255, cv2.THRESH_BINARY)[1]
+    #print(hi_thresh,height,width)
+    Thresh = max(hi_thresh,0)
+    img = cv2.threshold(blurred, Thresh, 255, cv2.THRESH_BINARY)[1]
     
     return img
 
@@ -64,12 +76,14 @@ def read_light_status():
         df_status = pd.read_csv(PATH+'/device/light_status.csv')
         df_status = df_status[['LED0','LED1','LED2','LED3']].astype('str')
     except:
-
-        df_status = pd.DataFrame({'LED0': [False],'LED1': [False],'LED2': [False],'LED3': [False]})
+        print('ERROR READING FILE')
+        df_status = pd.DataFrame({'LED0': [False,0,0],'LED1': [False,0,0],'LED2': [False,0,0],'LED3': [False,0,0]})
 
     L = df_status.iloc[0,:].tolist()
+    X = [int(s) for s in df_status.iloc[1,:].tolist()]
+    Y = [int(s) for s in df_status.iloc[2,:].tolist()]
     #print('L', L)
-    return L
+    return L,X,Y
 
 
 def write_light_loc_from_IR(centers):
@@ -178,6 +192,7 @@ class MyVideoCapture:
     def __init__(self,sensor_id):
         
                   #try:
+        self.ALL_CENTER_list = []
         self.sensor_id = sensor_id
 
         # store the light status for taking the frames 
@@ -216,13 +231,14 @@ class MyVideoCapture:
     def get_frame(self):
         
         ret_val, img = self.cap.read()
-        img = cv2.resize(img, (640,480), interpolation=cv2.INTER_AREA)
+
+        img = cv2.resize(img, (640,360), interpolation=cv2.INTER_AREA)
 
         # Creating a translation matrix
-        translation_matrix = np.float32([ [1,0,-8], [0,1,8] ])
+        translation_matrix = np.float32([ [1,0,-16], [0,1,0] ])
 
         # Image translation
-        img = cv2.warpAffine(img, translation_matrix, (640,480))
+        img = cv2.warpAffine(img, translation_matrix, (640,360))
 
 
 
@@ -247,7 +263,7 @@ class MyVideoCapture:
             _,self.frame2=self.get_frame()
 
 
-            light_status = read_light_status()
+            light_status, X_EXP, Y_EXP = read_light_status()
             #print(light_status)
             #print(light_status[0], light_status[0]==False, light_status[0]==True)
             for i in range(4):
@@ -274,15 +290,15 @@ class MyVideoCapture:
                     bkg = cv2.addWeighted( self.bkgA[i], 0.5, self.bkgB[i], 0.5, 0.0)
                     img = cv2.addWeighted( self.imgA[i], 0.5, self.imgB[i], 0.5, 0.0)   # average of two images
                     PATH = os.path.dirname(os.path.abspath(__file__)) # path of the current file (not the master file)
-                    print('saving image in', PATH+"/bkg.jpg")
-                    cv2.imwrite(PATH+"/saved_images/"+timestr+"bkg.jpg", bkg)     # save frame as JPEG file
-                    cv2.imwrite(PATH+"/saved_images/"+timestr+"img.jpg", img)     # save frame as JPEG file
+                    #print('saving image in', PATH+"/bkg.jpg")
+                    #cv2.imwrite(PATH+"/saved_images/"+timestr+"bkg.jpg", bkg)     # save frame as JPEG file
+                    #cv2.imwrite(PATH+"/saved_images/"+timestr+"img.jpg", img)     # save frame as JPEG file
 
                     img_diff = cv2.subtract(img, bkg)                    # Updated by moh
-                    cv2.imwrite(PATH+"/saved_images/"+timestr+"img_diff.jpg", img_diff)
+                    cv2.imwrite(PATH+"/saved_images/"+timestr+'_'+str(i)+str(X_EXP[i])+'_'+str(Y_EXP[i])+"img_diff.jpg", img_diff)
                     print(img_diff.shape)
                     #print(img_diff[100,100,0])
-                    img_prcs = pre_process(img_diff)          # Process after subtraction
+                    img_prcs = pre_process(img_diff,X_EXP[i], Y_EXP[i])          # Process after subtraction
                     #print('img_prcs.shape: ', img_prcs.shape)
                     # get IR centers
                     
@@ -295,10 +311,16 @@ class MyVideoCapture:
                         print('ERROR: find_IR.find_loc(img_prcs)')
                         centers = [[]]
 
-                    cv2.imwrite(PATH+"/saved_images/"+timestr+"img_prcs.jpg", img)
+                    # ALL_CENTER_list for saving all of the found centers [for debugging]
+                    self.ALL_CENTER_list.append([timestr,centers])
+
+                    shared_variables.light_centers  = centers
+                    cv2.imwrite(PATH+"/saved_images/"+timestr+'_'+str(i)+str(X_EXP[i])+'_'+str(Y_EXP[i])+"_img_prcs.jpg", img)
                     # update light_loc in the shared file
                     write_light_loc_from_IR(centers)
+                    print('Expected X Y', X_EXP[i], Y_EXP[i])
                     print('centers ', centers)
+
 
                     # update status
                 self.previous_light_status[i] = light_status[i]
@@ -318,6 +340,8 @@ class MyVideoCapture:
         self.cap.stop()
         self.cap.release()
         cv2.destroyAllWindows()
+
+
 
 
 if __name__ == "__main__":

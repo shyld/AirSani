@@ -32,15 +32,15 @@ shared_variables.TEST = True
 def origin_center_2_corner(x1,x2,y1,y2):
 	xp1 = max(int(x1 + shared_variables.Cam_width/2),0)
 	xp2 = min(int(x2 + shared_variables.Cam_width/2),shared_variables.Cam_width)
-	yp1 = max(int(shared_variables.Cam_height/2 -y1),0)
-	yp2 = min(int(shared_variables.Cam_height/2 -y2),shared_variables.Cam_height)
+	yp1 = max(int(y1 + shared_variables.Cam_height/2),0)
+	yp2 = min(int(y2 + shared_variables.Cam_height/2),shared_variables.Cam_height)
 	return xp1,xp2,yp1,yp2
 
 def origin_corner_2_center(x1,x2,y1,y2):
 	xp1 = int(x1 - shared_variables.Cam_width/2)
 	xp2 = int(x2 - shared_variables.Cam_width/2)
-	yp1 = int(shared_variables.Cam_height/2-y1)
-	yp2 = int(shared_variables.Cam_height/2-y2)
+	yp1 = int(y1 - shared_variables.Cam_height/2)
+	yp2 = int(y2 - shared_variables.Cam_height/2)
 	return xp1,xp2,yp1,yp2
 
 
@@ -98,7 +98,7 @@ class person_detection:
 		final_list = []
 		NEW = moving_persons_boxes
 		OLD = self.persons_previous
-		#print('self.persons_previous', self.persons_previous)
+		print('self.persons_previous', self.persons_previous)
 
 		# Special Cases
 		if OLD.shape[0]==0:
@@ -126,7 +126,7 @@ class person_detection:
 		
 		# Update time
 		#final_list = np.array(final_list)
-		#print('final_list.shape: ',np.array(final_list).shape)
+		print('final_list.shape: ',np.array(final_list).shape)
 		for i in range(len(final_list)):
 			final_list[i][4] = t_now
 		#[for final_list[:,4] = t_now]
@@ -148,11 +148,11 @@ class person_detection:
 			
 			# Run poes estimation
 			if ON_Jetson:
-				#print(x1,x2,y1,y2)
-				#print(frame.shape)
-				#print(frame[y2:y1].shape)
-				#print(frame[y1:y2,x1:x2].shape)
-				#print('frame[y1:y2,x1:x2,:].shape: ', frame[y1:y2,x1:x2,:].shape)
+				print(x1,x2,y1,y2)
+				print(frame.shape)
+				print(frame[y2:y1].shape)
+				print(frame[y1:y2,x1:x2].shape)
+				print('frame[y1:y2,x1:x2,:].shape: ', frame[y1:y2,x1:x2,:].shape)
 				(person_count , L_all, L_touch, frame) = self.my_pose_estimation.get_keypoints(frame[y1:y2,x1:x2,:])
 			else:
 				person_count = 0
@@ -168,13 +168,13 @@ class person_detection:
 
 
 		#print('I_common_OLD ',I_common_OLD)
-		#print('time from OLD',(t_now-OLD[:,4])%1000)
-		#print('I_no_person ', I_no_person)
+		print('time from OLD',(t_now-OLD[:,4])%1000)
+		print('I_no_person ', I_no_person)
         
         # I_complement_OLD are those boxes from the previous frame, infered to contain still people
 		I_complement_OLD = [i for i in range(len(OLD)) if (not (i in I_common_OLD)) and (not (i in I_no_person))]
 
-		#print('I_complement_OLD: ', I_complement_OLD)
+		print('I_complement_OLD: ', I_complement_OLD)
 		
 		# Merge the OLD and NEW Boxes to the final_list
 		T = OLD[I_complement_OLD,:].tolist()
@@ -266,38 +266,35 @@ class person_detection:
 			if cv2.contourArea(contour) < contour_lower or cv2.contourArea(contour) > contour_upper :
 				continue
 
-
 			x1,x2,y1,y2 = origin_corner_2_center(x,x+w,y,y+h)
 			L.append((x1, y1, x2, y2))
-			#print('Original x,y', x,y)
-			#print('Converted x,y', x1,y1)
 		#print('in person detection: L', L)
 		#if len(L)>0:
 		# Find moving people boxes based on motion boxes
 		try:
 		#if True:
 			M = self.find_moving_people(L=L)
-			#print('M: try', M)
+			print('M: try')
 		except:
 		#if False:
 			M = np.array([])
-			#print('M: except')
+			print('M: except')
 
 		# Update people boxes
 		try:
 		#if True:
 			A = self.update_all_people(moving_persons_boxes=M, frame = frame1)
-			#print('A: try')
+			print('A: try')
 		except:
 		#if False:
 			A = np.array([])
-			#print('A: except')
+			print('A: except')
 
 		#else:
 		#	M = np.array([])
 		#	A = np.array([])
-		#print('find_moving_people: ', M)
-		#print('update_all_people: ', A)
+		print('find_moving_people: ', M)
+		print('update_all_people: ', A)
 
 		#S = self.find_still_people(all_people=A)
 		S = np.array([])
