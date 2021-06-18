@@ -38,6 +38,7 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 #dname = os.path.dirname(abspath)
 #os.chdir(dname)
 
+ROTATE_CAM = False
 
 show_fps = True
 
@@ -72,6 +73,12 @@ SENSOR_MODE_720=3
 
 b0=0
 
+
+def draw_square(frame):
+    frame = overlay_square(frame, 380,120,400,160,(155,155,155),0.7)
+
+    return frame
+
 # preprocessing
 def pre_process(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -85,7 +92,9 @@ class MyVideoCapture:
     def __init__(self,sensor_id):
         
         self.sensor_id = sensor_id
+        self.t_prev = 0
 
+        person_scale = 30
         if sensor_id >= 0:
 
             try:
@@ -117,16 +126,9 @@ class MyVideoCapture:
               #try:
                 ret, self.frame1 = self.get_frame()
                 #print('self.frame1.shape', self.frame1.shape)
-
                 person_scale= int(self.frame1.shape[0]/7)
 
-                # Load algorithm classes
-                print('Loading classes...')
-                self.my_person_detection = person_detection(person_scale=person_scale)
-                print('My_person_detection loaded')
-                #self.my_pose_estimation = pose_estimation()
-                #print('My pose loaded')
-
+                
             except:
                 print('running from the sample video')
                 self.left_camera.stop()
@@ -137,7 +139,7 @@ class MyVideoCapture:
             print('running from file:')
             path = os.path.dirname(os.path.abspath(__file__))
             print('path: ', path)
-            self.cap = cv2.VideoCapture(path+'/media/03.mp4')
+            self.cap = cv2.VideoCapture(path+'/media/01.mp4')
             frame_width = int( self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height =int( self.cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
             ret, frame1 = self.cap.read()
@@ -145,18 +147,24 @@ class MyVideoCapture:
 
             person_scale= int(self.frame1.shape[0]/7)
 
-            # Load algorithm classes
-            print('Loading classes...')
-            self.my_person_detection = person_detection(person_scale=person_scale)
-            print('My_person_detection loaded')
-            
-            #self.my_pose_estimation = pose_estimation()
-            #print('My pose loaded')
+        # Load algorithm classes
+        print('Loading classes...')
+        self.my_person_detection = person_detection(person_scale=person_scale)
+        print('My_person_detection loaded')
 
+
+
+    def close_all(self):
+        self.left_camera.stop()
+        self.left_camera.release()
+        cv2.destroyAllWindows()
 
     def get_frame(self):
         
         if self.sensor_id>=0:
+
+        
+            #ret_val, img = self.cap.read()
             try:
 
                 img=read_camera(self.left_camera,False)
@@ -166,13 +174,34 @@ class MyVideoCapture:
                 self.left_camera.release()
                 cv2.destroyAllWindows()
 
-        if self.sensor_id==-1:
-            try:
-                ret, img=self.cap.read()
-                img = cv2.resize(img, (640,480))
-            except:
-                print('error: get_frame')
+            img = cv2.resize(img, (640,360), interpolation=cv2.INTER_AREA)
 
+            # Creating a translation matrix
+            translation_matrix = np.float32([ [1,0,-8], [0,1,8] ])
+
+            # Image translation
+            img = cv2.warpAffine(img, translation_matrix, (640,360))
+            #img = cv2.resize(img, (640, 360))
+
+            if ROTATE_CAM:
+                img = cv2.rotate(img, cv2.ROTATE_180)
+
+
+        if self.sensor_id==-1:
+            ret, img=self.cap.read()
+            
+            if ret==False:
+               print('no video')
+               self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+               ret, img=self.cap.read()
+                
+            img = cv2.resize(img, (640,360))
+
+
+
+        if self.sensor_id==-2:
+            img = np.ones((480,640))*255
+            img = cv2.resize(img, (640,480))
             
         return True, img
             
@@ -186,16 +215,33 @@ class MyVideoCapture:
         time.sleep(0.1)
         ret, frame2 = self.get_frame()
         frame2_org = frame2.copy()
+
+        t = datetime.datetime.now()
+        t_s =  int(t.second/20)
+
+        if t_s!= self.t_prev:
+            self.t_prev = t_s
+            #frame2 = draw_square(frame2)
+        
+
         #print('in get_processed_frame: frame1.shape, frame2.shape: ', frame1.shape, frame2.shape)
         #print('in get prosessed frame, ', ret)
         if ret:
-            # Detect events
-            moving_people, moving_areas, still_centers, M = self.my_person_detection.get_all_people(self.frame1,frame2)
-
+            
+            try:
+                # Detect events
+                moving_people, moving_areas, still_centers, M = self.my_person_detection.get_all_people(self.frame1,frame2)
+            except:
+                moving_people = np.array([])
+                moving_areas = np.array([])
+                still_centers = np.array([])
             # Add the detections to the shared_variables
+            #print('moving_people, moving_areas, still_centers, M', moving_people, moving_areas, still_centers, M)
             shared_variables.add_detections(moving_areas, priority=2)
             shared_variables.add_people(moving_people)
             UV_assignment.check_human_exposure()
+        
+            #print('no people detection')
             
             #print('in RGB_cam, shared_variables.detected_coordinates', len(shared_variables.detected_coordinates))
             #print('len(shared_variables.detected_coordinates) ',len(shared_variables.detected_coordinates))
@@ -220,8 +266,9 @@ class MyVideoCapture:
                         #print('CHECK 4'9,len(shared_variables.scored_spots))
             frame2 = draw_detections(frame2)
             
-            ## Write to the file
             shared_variables.write_detections_to_file()
+            
+
             #print('CHECK 5',len(shared_variables.scored_spots))
 
             #print('CHECK 3',len(shared_variables.scored_spots))
@@ -257,12 +304,12 @@ class MyVideoCapture:
                         #print('**********',frame_region.shape)
                         
                         if frame_region.shape[0]>0 and frame_region.shape[1]>0: #self.sensor_id>=0:
-                            print('************* frame_region.shape: ', frame_region.shape)
+                            #print('************* frame_region.shape: ', frame_region.shape)
                             person_count = 0
                             #frame_region, touch_spots, person_count = self.my_pose_estimation.detect_touch(frame_region)
                             # If detect a person then reset the time of the box (the time last person detected)
                             
-                            print('**************  person_count: ', person_count)
+                            #print('**************  person_count: ', person_count)
                             if person_count>0:
                                 # update time
                                 moving_people[u,4] = int(time.time())%1000

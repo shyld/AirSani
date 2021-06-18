@@ -10,9 +10,12 @@ import os
 from sklearn.neighbors import NearestNeighbors
 
 from control_codes import shared_variables
+from control_codes.device.steer import UV
+
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
+my_UV = UV()
 
 
 def check_human_exposure():
@@ -56,6 +59,9 @@ def check_human_exposure():
 		shared_variables.scored_spots.loc[df_UV['index'].to_numpy()[idx],'score']=1
 		#print('2 ', shared_variables.scored_spots.loc[df_UV['index'].to_numpy()[idx],'score'])
 		shared_variables.write_scores_to_file_immediate()
+
+		# To Modify Later
+		my_UV.UV_all_off()
 	except:
 		print('no close points')
 
@@ -100,6 +106,9 @@ def check_human_exposure_2(x1,x2,y1,y2):
 			shared_variables.scored_spots.loc[df_UV['index'].to_numpy()[i],'score']=1
 			#print('2_2: ',shared_variables.scored_spots.loc[df_UV['index'].to_numpy()[i],'score'])
 			shared_variables.write_scores_to_file_immediate()
+			
+			# To Modify Later
+			my_UV.UV_all_off()
 
 
 def check_human_exposure_3(x,y):
@@ -108,9 +117,9 @@ def check_human_exposure_3(x,y):
 # check with the detected_coordinates, if they are close then turn off the UV.
 
 	D_temp = shared_variables.detected_coordinates
-	
+	print('check_human_exposure_3: D_temp', D_temp)
 	if len(D_temp)==0:
-		return 0
+		return False
 
 	# Convert to numpy
 	D_temp['x'] = (D_temp['Left']+D_temp['Right'])/2 #- shared_variables.Cam_width/2

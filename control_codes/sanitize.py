@@ -1,135 +1,130 @@
 
+import math
 import pandas as pd
 import numpy as np
-import time
-import math
 import datetime 
-import steer
+#from control_codes import shared_variables
+import shared_variables
+import os
+import time 
+from device.steer import UV #control_codes.
 #from azure.iot.device import IoTHubDeviceClient, Message
+shared_variables.init()
+
+############################# PARAMTERS ###############
+#shared_variables.init()
+PATH = os.path.dirname(os.path.abspath(__file__))
+path = PATH
+############################
+
+LED = 0
+my_UV = UV()
+num_LED = 1
+for i in range(num_LED):
+    LED =i
+    my_UV.UV_LED_on(LED)
+    print(i)
+    time.sleep(2)
+    my_UV.UV_LED_off(LED)
+
+#time.sleep(2)
+LED = 0
+x,y = my_UV.init_loc(LED)
+print('LED initialized. location x,y', x,y)
+
+#################################################
+    ## update check_error file
+def set_log(s):
+    PATH = os.path.dirname(os.path.abspath(__file__))
+    df_check = pd.read_csv(PATH+'/shared_csv_files/log.csv')
+    df_check[s] = pd.to_datetime(df_check[s])
+    df_check[s] = [datetime.datetime.now()]
+    df_check.to_csv(PATH+'/shared_csv_files/log.csv',index=False)
+
+set_log('F3')
 
 
-df = pd.read_csv('arguments.csv')
-# read arguments
-F_running = (df[df['arguments']=='F3']['value'].iloc[0]=='TRUE') & (df[df['arguments']=='F0']['value'].iloc[0]=='TRUE')
-Cam_width = int(df[df['arguments']=='Cam_width']['value'].iloc[0])
-Cam_height= int(df[df['arguments']=='Cam_height']['value'].iloc[0])
-Check_stop_period = int(df[df['arguments']=='Check_stop']['value'].iloc[0])
-Coverage_size_x = int(df[df['arguments']=='Coverage_size']['value'].iloc[0])
-UV_period = int(df[df['arguments']=='UV_period']['value'].iloc[0]) # Min Exposure Time for each spot
-Num_UV_LED = int(df[df['arguments']=='Num_UV_LED']['value'].iloc[0])
-UV_after_sec = int(df[df['arguments']=='UV_after_sec']['value'].iloc[0])
-Cloud_seq_len = int(df[df['arguments']=='Cloud_seq_len']['value'].iloc[0])
-UV = df[df['arguments']=='UV']['value'].iloc[0]=='TRUE'
+def LED_in_area(LED=0,x=0,y=0):
+    if LED==0:
+        if -30<x and x<100 and -30<y and y<100:
+            return True
+        else:
+            return False
 
-i0=5
-j0=5
+#shared_variables.init()
+print('opened sanitize.py')
 
 
-WaitTime = .0005  # motor speed 
-Coverage_size_y = Coverage_size_x
-
-df_empty = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
-
-sanitization_list=[]
-##
-
-#Cumulative sanitization matrix
-C = np.zeros((2*i0,2*j0))
+a0,a1, b0, b1, c0,c1 = 0,0,0,0,0,0
+#parsing_time = datetime.datetime(2010, 1, 1, 1, 1)
 
 # update check error file
 t = datetime.datetime.now()
-df = pd.DataFrame({'F1':[t], 'F2':[t], 'F3':[t]})
-df.to_csv('check_error.csv',index=False)
-
-
-#######################
-########################  Motor Functions ###############
-
-# load UV_coordinates from scored_spots 
-def get_UV_coordinate():
-    #df_priority = pd.read_csv('unsorted_scores.csv')
-    # covert to correct data types
-    #df_priority['time'] = pd.to_datetime(df_priority['time'])
-
-    df = shared_variables.scored_spots
-    # sort and filter df_priority
-    df_sorted = df[df['time']< datetime.datetime.now() - datetime.timedelta(seconds=UV_after_sec)]
-
-    if len(df_sorted)>0:
-        df_sorted = df_sorted.sort_values(['priority','score'], ascending=False)
-        df_top_locations = df_sorted.iloc[0:Num_UV_LED,2:4] 
-        # save to csv (UV_priority.csv)
-        #df_sorted.to_csv('UV_priority.csv',index=False)
-    return df_top_locations
-
-
-# update scores in unsorted_scores.csv
-def update_scores(df_top_locations):
-
-    # update df_priority
-    for k in len(df_top_locations):
-        i,j = df_top_locations.iloc[k,0],df_top_locations.iloc[k,1]
-        ## update the scores
-        idx  = (shared_variables.scored_spots['i']==i) & (shared_variables.scored_spots['j']==j)
-        shared_variables.scored_spots.loc[idx,'score'] -= 1 
-        ## remove zero scores
-        shared_variables.scored_spots = shared_variables.scored_spots[shared_variables.scored_spots.score != 0].reset_index(drop=True)
-        if len(shared_variables.scored_spots)==0:
-            shared_variables.scored_spots = df_empty
-    #print('MMMMMMMM  ', df_priority.columns)
-    #df_priority.to_csv('unsorted_scores.csv',index=False)
 
 # A function to check the stopping rule
 def check_stop(b0,b1):
     F_running = True
     if b1 != b0:
-        print('Check_stop')
+        #print('Check_stop')
         b0 = b1
-        df0 = pd.read_csv('config.csv')
+        df0 = pd.read_csv(path+'/shared_csv_files/onoff.csv')
         F_running = (df0[df0['arguments']=='F3']['value'].iloc[0]=='TRUE') & (df0[df0['arguments']=='F0']['value'].iloc[0]=='TRUE')
     return b0, F_running
 
-
-#######################
-######################## main code ###############
-
-a0,a1,b0,b1 = 0,0,0,0
-d1_prev,d2_prev = 0,0
-
-# setup the output pins
-if UV:
-    steer.setup_pins()
-
-
+F_running = True
 
 # process frames until user exits
+#while True:
+x_prev = 0
+y_prev = 0
 while F_running:
-
+    time.sleep(0.3)
     t = datetime.datetime.now()
-    a1 =  int(t.microsecond/(UV_period))
-    b1 =  int(t.second/Check_stop_period)
-
-	# Check_stop
+    b1 =  int(t.second)
     b0, F_running = check_stop(b0,b1)
 
-    if a1 != a0:
-        a0 = a1
-
-        try:
-            top_locations = get_UV_coordinate()
-        except:
-            continue
-
-        # update scores based on the current sanitization locations
-        if len(top_locations)>0:
-            steer.apply_UV(top_locations)
-            update_scores(top_locations)
+    try:
+        df_score = pd.read_csv(PATH+'/shared_csv_files/scored_spots.csv')
+        #df_new =  pd.concat([df, detected_coordinates])
+    except:
+        df_score = pd.DataFrame({'time':[], 'priority':[],'i':[], 'j':[],'score':[]})
 
 
+    # covert to correct data types
+    if len(df_score)>0:
+        df_score['time'] = pd.to_datetime(df_score['time'])
+    else:
+        continue
+
+    df_UV = df_score[df_score['score']==-1]
+
+    #print(df_score[df_score['score']==-1])
+
+    #print('df_score: ', df_score)
+    if len(df_UV)>0:
+        #print('df_UV: ', df_UV)
+        #print('111111111     df_UV len', len(df_UV))
+        # remove the indexes
+        
+        #df_score  = df_score[idx].drop().reset_index(drop=True)
+        #df_score.to_csv(PATH+'/shared_csv_files/scored_spots.csv',index=False)
+
+        # plot 
+        for i in range(len(df_UV)):
+
+            t,pr,x1,y1,sc = df_UV['time'].iloc[i], int(df_UV['priority'].iloc[i]), int(df_UV['i'].iloc[i]), int(df_UV['j'].iloc[i]), int(df_UV['score'].iloc[i])
+            #print('UV: x,y ',x1,y1)
+
+            # Apply UV
+            if (x1 != x_prev or y1 !=y_prev) and LED_in_area(LED=LED,x =x1,y=y1):
+                x_prev = x1
+                y_prev = y1
+                
+                x1 = x1 + shared_variables.Coverage_size/2
+                y1 = y1 + shared_variables.Coverage_size/2
+                print('Sanitize: Two Step Steering to x,y ', x1,y1)
+                my_UV.two_step_steer(LED=LED, x=x1,y=y1)
 
 
-    # update check_error file
-    df_check = pd.read_csv('check_error.csv')
-    df_check['F3'] = pd.to_datetime(df_check['F3'])
-    df_check['F3'] = [t]
-    df_check.to_csv('check_error.csv',index=False)
+my_UV.UV_all_off()
+

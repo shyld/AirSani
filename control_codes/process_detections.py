@@ -86,7 +86,8 @@ while F_running:
 	b0, F_running = check_stop(b0,b1)
 
 	#print('process_detections running: inside the while loop ')
-	time.sleep(3.0)
+	# To modify Later ###############
+	time.sleep(3)
 
 	
 	# Check_stop every x sec
@@ -129,20 +130,29 @@ while F_running:
 		for i in range(len(df)):
 			#print(i, len(df) )
 			#print('len(df) ' , len(df_remaining))
+			
 
 			x1 = math.floor((df.Left.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
-			x2 = math.floor((df.Right.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
-			y1 = math.floor((df.Top.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			x2 = math.ceil((df.Right.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
+			y1 = math.ceil((df.Top.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
 			y2 = math.floor((df.Bottom.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size
 
-			#print('-------------------- df.Left.iloc[i], x1: ', df.Left.iloc[i], x1, shared_variables.Cam_width, shared_variables.Coverage_size)
+			y1 = y1 + shared_variables.Coverage_size
 
+			#print('-------------------- df.Left.iloc[i], x1: ', df.Left.iloc[i], x1, shared_variables.Cam_width, shared_variables.Coverage_size)
+			#print(x1,x2,y1,y2,'x1,x2,y1,y2')
+			#print(math.floor((df.Top.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size)
+			#print(math.ceil((df.Top.iloc[i])/shared_variables.Coverage_size)* shared_variables.Coverage_size)
+			
 			t_detection = df.time.iloc[i]
 			priority = df.priority.iloc[i]
+			
+			#print(np.arange(x1,x2, shared_variables.Coverage_size))
+			#print(np.arange(y1,y2, shared_variables.Coverage_size))
 
 			for i1 in np.arange(x1,x2, shared_variables.Coverage_size):
-				for j1 in np.arange(y1,y2, shared_variables.Coverage_size):
-					#print(i1,j1)
+				for j1 in np.arange(y2,y1, shared_variables.Coverage_size):	# Note that y2>y1
+					#print('i1,j1',i1,j1)
 
 					idx  = (df_score['i']==i1) & (df_score['j']==j1) & (df_score['score']!=-1)
 					df_search = df_score[idx]

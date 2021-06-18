@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec  9 15:01:04 2020
-
 @author: Administrator
 """
 
@@ -23,7 +22,7 @@ import subprocess
 
 global program_mode
 program_mode = 'off'
-
+import pandas as pd
 
 import sys
 # insert at 1, 0 is the script path (or '' in REPL)
@@ -38,6 +37,7 @@ sys.path.insert(1, '/home/shyldai/shyld/AiSani/control_codes/device')
 #from cam_IR import run_camera
 from control_codes.device import steer
 from control_codes.RGB_cam_module import MyVideoCapture
+from control_codes.IR_cam_module import MyVideoCapture as MyIRCapture
 #from control_codes.cam_module import MyVideoCapture
 #import IR_cam_frame
 #import RGB_cam_frame
@@ -51,7 +51,6 @@ path = os.path.dirname(os.path.abspath(__file__))
 #print(path+"/control_codes/process_detections.py")
 
 #with open(path+"/control_codes/shared_csv_files/F2_log.csv","wb") as out, open(path+"/control_codes/shared_csv_files/F2_log_err.csv","wb") as err:
-subprocess.Popen(["python3 "+ path+"/control_codes/process_detections.py"],close_fds=True, shell=True) # stdout=out, stderr=err, 
 
 #subprocess.Popen(["python3", "control_codes/process_detections.py"], shell=True)
 
@@ -75,15 +74,12 @@ def trunc(x):
 root = tkinter.Tk()  
 #root.geometry("780x630")
 
-#root.attributes("-fullscreen", True)
-
-#root.wm_title("Digital Microscope")
 
 root.wm_attributes('-type','dock')
-
 root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
 root.focus_force()
-root.wm_title("Digital Microscope")
+
+root.wm_title("Shyld")
 #root.config(background='#BDBDBD')
 
 #////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +91,6 @@ root.wm_title("Digital Microscope")
 Combo = ttk.Combobox(root, values = vlist,font=" 6")
 Combo.set("Pick an Option")
 Combo.place(x=0,y=0)
-
 #creat Start button
 button =Button(root, text = "START",bd=5,activebackground='blue',width=55,height=1)
 button.bind('<ButtonPress-1>', lambda event: start_button(Combo.get()))    
@@ -155,7 +150,7 @@ def password_set():
   
 
 RB = tkinter.Button(root, text = "Close",width = 9,height=3,fg="red",bd=4,command=password_set)
-
+ 
 RB.place(x=1405,y=0)
 RB.bind('<ButtonPress-1>', lambda event: password_set)
 
@@ -173,13 +168,34 @@ R = tkinter.Button(root, text = "Connect to WIFI",width = 15,height=5,fg="blue",
 R.place(x=1220,y=10)
 R.bind('<ButtonPress-1>', lambda event: setting)
 
+def set_onoff(s):
+    PATH = os.path.dirname(os.path.abspath(__file__))
+    df = pd.read_csv(PATH+'/control_codes/shared_csv_files/onoff.csv')
+    if s:
+        s_string = 'TRUE'
+    else:
+        s_string = 'FALSE'
 
+    #df[df['arguments']=='F0']['value'].iloc[0] = s_string
+    idx  = (df['arguments']=='F0')
+    df.loc[idx,'value'] = s_string
+    df.to_csv(PATH+'/control_codes/shared_csv_files/onoff.csv',index=False)
+    
 
 
 ##############
 def program_mode_set(mode):
     global program_mode
     program_mode = mode
+    if mode == 'auto':
+        set_onoff(True)
+        subprocess.Popen(["python3 "+ path+"/control_codes/process_detections.py"],close_fds=True, shell=True) # stdout=out, stderr=err, 
+        #subprocess.Popen(["sudo python3 "+ path+"/control_codes/sanitize.py"],close_fds=True, shell=True) # stdout=out, stderr=err, 
+    
+    if mode == 'manual' or mode == 'off':
+        set_onoff(False)
+
+
 
    
 
@@ -376,7 +392,6 @@ text2_unit2.bind('<Return>', func2)
 """button = ttk.Button(labelframe_2, text = "Go")
 button.place(x=0,y=80)
 button.bind('<ButtonPress-1>', lambda event: go(text1_unit1.get(),text2_unit1.get(),"unite_2"))
-
 button = ttk.Button(labelframe_2, text = "Turn On")
 button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_2"))"""
@@ -479,7 +494,6 @@ text2_unit3.bind('<Return>', func3)
 button = ttk.Button(labelframe_3, text = "Go")
 button.place(x=0,y=80)
 button.bind('<ButtonPress-1>', lambda event: go(text1_unit1.get(),text2_unit1.get(),"unite_3"))
-
 button = ttk.Button(labelframe_3, text = "Turn On")
 button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_3"))"""
@@ -586,9 +600,6 @@ text2_unit4.bind('<Return>', func4)
 button = ttk.Button(labelframe_4, text = "Go")
 button.place(x=0,y=80)
 button.bind('<ButtonPress-1>', lambda event: go(text1_unit1.get(),text2_unit1.get(),"unite_4"))
-
-
-
 button = ttk.Button(labelframe_4, text = "Turn On")
 button.place(x=100,y=80)
 button.bind('<ButtonPress-1>', lambda event: turnon("unite_4"))"""
@@ -663,10 +674,10 @@ class App:
         #self.video_source = video_source
         
         # open video source
-        self.vid = MyVideoCapture(sensor_id=0)
+        self.vid = MyVideoCapture(sensor_id=-1)
         
         #self.video_source_2 = video
-        self.vid_2=MyVideoCapture(sensor_id=1)
+        self.vid_2 = MyIRCapture(sensor_id=1)
         
         # Create a canvas that can fit the above video source size
         
@@ -676,7 +687,7 @@ class App:
         self.canvas_2 = tkinter.Canvas(window, width = 640, height = 480)
         self.canvas_2.place(x=480,y=490)
         
-        self.delay = 15
+        self.delay = 100
         self.update()
         
         self.window.mainloop()
@@ -686,10 +697,12 @@ class App:
         # Select the program mode
         if program_mode=='auto':
             ret, frame = self.vid.get_processed_frame()#frame()#get_processed_frame()
+            ret_2,frame_2=self.vid_2.get_processed_IR_frame()#frame()#get_processed_frame()
+        
         else:
             ret, frame = self.vid.get_frame()
-        
-        ret_2,frame_2=self.vid_2.get_frame()#frame()#get_processed_frame()
+            ret_2,frame_2 = self.vid_2.get_frame() #self.vid_2.get_frame()
+
         #print(frame.shape[0])
 
         DISPLAY_WIDTH=640
@@ -721,8 +734,3 @@ App(root, "Shyld AI")
 #os.popen("bash lock_screen.txt")
 #subprocess.Popen(["bash", "lock_screen.txt"])
 root.mainloop()
-
-
-
-
-
